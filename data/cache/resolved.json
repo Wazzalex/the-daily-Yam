@@ -1,1 +1,19 @@
-{"youtube":{},"podcasts":{}}
+{
+ "youtube": {
+  "@GreatArtExplained": "UC87WLm0IaVihJbsyrwH01jg",
+  "@nationalgallery": "UCrPOgNsUldOtQsTf9Kjlm_A",
+  "@thersc": "UCjz6LNDQOWaCkQegAHxyo2g",
+  "@TEDEd": "UCAuUUnT6oDeKwE6v1NGQxug",
+  "@shakespearesglobe": "UCwN-jwNNNQN-8sfKG-qg8uA",
+  "@ARTEConcert": "UCwI-JbGNsojunnHbFAc0M4Q"
+ },
+ "podcasts": {
+  "search:Backlisted podcast": "https://feeds.megaphone.fm/GLT2438307082",
+  "search:The Guardian Books Podcast": "https://www.theguardian.com/childrens-books-site/series/childrens-books-podcast/podcast.xml",
+  "search:Open Book BBC Radio 4": "https://podcasts.files.bbci.co.uk/p0dwxkv4.rss",
+  "search:Bookclub BBC Radio 4": "https://podcasts.files.bbci.co.uk/b006s5sf.rss",
+  "search:Front Row BBC Radio 4": "https://podcasts.files.bbci.co.uk/b006qsq5.rss",
+  "search:TED Talks Education": "https://feeds.feedburner.com/iTunesPodcastTTEducation",
+  "search:Music Matters BBC Radio 3": "https://podcasts.files.bbci.co.uk/b006tnvx.rss"
+ }
+}
