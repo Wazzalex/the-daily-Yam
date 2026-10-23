@@ -50,6 +50,7 @@ export interface SourceReport {
   fetched: number;
   kept: number;
   error?: string;
+  note?: string;
   ms: number;
 }
 
@@ -118,6 +119,8 @@ export interface SiteConfig {
   };
   rules: {
     window_hours: number;
+    /** Longer window for podcasts and videos, which are published weekly. */
+    window_hours_media: number;
     keep_days: number;
     max_per_category_per_day: number;
     home_mix_size: number;

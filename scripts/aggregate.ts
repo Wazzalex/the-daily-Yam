@@ -67,7 +67,7 @@ function itemId(raw: RawItem): string {
   return raw.type === "event" ? sha1(base + "|" + raw.title.toLowerCase()) : sha1(base);
 }
 
-function isFresh(raw: RawItem, now: Date, windowHours: number, todayKey: string): boolean {
+function isFresh(raw: RawItem, now: Date, windowHours: number, mediaWindowHours: number, todayKey: string): boolean {
   if (raw.type === "event" && raw.eventDate) {
     const end = raw.eventEnd ?? raw.eventDate;
     const soon = new Date(now.getTime() + 60 * 86400000).toISOString().slice(0, 10);
@@ -75,7 +75,25 @@ function isFresh(raw: RawItem, now: Date, windowHours: number, todayKey: string)
   }
   if (!raw.publishedAt) return false;
   const age = now.getTime() - new Date(raw.publishedAt).getTime();
-  return age >= -3600000 && age <= windowHours * 3600000;
+  // Podcasts and videos come out weekly: give them a longer window (they are only ever added once).
+  const hours = raw.type === "podcast" || raw.type === "video" ? mediaWindowHours : windowHours;
+  return age >= -3600000 && age <= hours * 3600000;
+}
+
+/** Normalised title used to spot the same story coming from several sources. */
+function titleKey(title: string): string {
+  return title
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\b(le|la|les|de|des|du|the|a|an|of|and|et|en|au|aux|à|in|on|for)\b/g, " ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function isNearDuplicate(key: string, seen: string[]): boolean {
+  if (key.length < 12) return seen.includes(key);
+  return seen.some((s) => s === key || (s.length >= 12 && (s.includes(key) || key.includes(s))));
 }
 
 // ---------------------------------------------------------------- main
@@ -88,6 +106,8 @@ async function main() {
   const existing = readItems();
   const known = new Set(existing.map((i) => i.id));
   const knownUrls = new Set(existing.map((i) => normalizeUrl(i.url)));
+  const byCatExisting = new Map<string, Item[]>();
+  for (const i of existing) byCatExisting.set(i.category, [...(byCatExisting.get(i.category) ?? []), i]);
   const reports: SourceReport[] = [];
   const newItems: Item[] = [];
   const newByCategory: Record<string, number> = {};
@@ -111,6 +131,7 @@ async function main() {
         else if (src.type === "news") raws = await fetchNews(src);
         else if (src.type === "page") {
           const page = await fetchPage(src);
+          report.note = `page: ${page.text.length} chars, ${page.links.length} links`;
           raws = DRY ? [] : await extractItemsFromPage(config, cat, page, src.name, src.lang ?? "fr", today);
           if (DRY) report.fetched = page.text.length > 200 ? 1 : 0;
         }
@@ -118,7 +139,7 @@ async function main() {
         for (const r of raws) {
           if (!r.title || !r.url) continue;
           if (isBlocked(r.domain, r.source, config.rules.blocked_domains)) continue;
-          if (!isFresh(r, now, config.rules.window_hours, today)) continue;
+          if (!isFresh(r, now, config.rules.window_hours, config.rules.window_hours_media, today)) continue;
           catRaw.push({ ...r, weight: src.weight ?? 1, alwaysInclude: Boolean(src.always_include) });
           report.kept += 1;
         }
@@ -130,20 +151,20 @@ async function main() {
       reports.push(report);
     });
 
-    // De-duplicate inside the section (by id and by near-identical title).
+    // De-duplicate inside the section: same URL, same story already on file, or a near-identical title
+    // (the same festival announced by three agendas). Favourites are checked first so they win ties.
+    catRaw.sort((a, b) => (b.weight - a.weight) || (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""));
     const seenIds = new Set<string>();
-    const seenTitles = new Set<string>();
+    const seenTitles: string[] = (byCatExisting.get(cat.id) ?? []).map((i) => titleKey(i.title));
     const fresh = catRaw.filter((r) => {
       const id = itemId(r);
-      const tkey = r.title.toLowerCase().replace(/[^a-z0-9À-ſ]+/g, " ").trim().slice(0, 80);
+      const tkey = titleKey(r.title);
       if (known.has(id) || knownUrls.has(normalizeUrl(r.url))) return false;
-      if (seenIds.has(id) || seenTitles.has(tkey)) return false;
+      if (seenIds.has(id) || isNearDuplicate(tkey, seenTitles)) return false;
       seenIds.add(id);
-      seenTitles.add(tkey);
+      seenTitles.push(tkey);
       return true;
     });
-    // Newest first, favourites first, then cap what we send to Claude.
-    fresh.sort((a, b) => (b.weight - a.weight) || (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""));
     const toJudge = fresh.slice(0, MAX_ITEMS ?? 60);
     log(`  ${catRaw.length} fresh, ${fresh.length} new, judging ${toJudge.length}`);
     if (DRY || !toJudge.length) {
@@ -277,7 +298,9 @@ async function main() {
   let greeting = `Good morning, Yamuna. Your ${new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: "Europe/Paris" }).format(now)} edition is ready.`;
   if (mix.length) {
     try {
-      greeting = await writeGreeting(config, mix, today);
+      const g = await writeGreeting(config, mix, today);
+      if (g) greeting = g;
+      else log("greeting came back empty; keeping the default line");
     } catch (err) {
       log(`greeting failed: ${(err as Error).message}`);
     }

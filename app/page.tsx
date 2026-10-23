@@ -39,7 +39,12 @@ export default function HomePage() {
 
       <section className="hero reveal" aria-label="Welcome">
         <p className="hero__line">{config.site.tagline}</p>
-        <p className="hero__greeting">{edition?.greeting ?? `Good morning, ${config.reader.name}. Your first edition prints tomorrow at six.`}</p>
+        <p className="hero__greeting">
+          {edition?.greeting ||
+            (edition
+              ? `Good morning, ${config.reader.name}. Your ${new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: "Europe/Paris" }).format(now)} edition is ready.`
+              : `Good morning, ${config.reader.name}. Your first edition prints tomorrow at six.`)}
+        </p>
       </section>
 
       <NavPills categories={config.categories} active="home" />

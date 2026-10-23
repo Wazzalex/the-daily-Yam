@@ -30,6 +30,7 @@ export function loadConfig(): SiteConfig {
   }
   const defaults: SiteConfig["rules"] = {
     window_hours: 48,
+    window_hours_media: 168,
     keep_days: 14,
     max_per_category_per_day: 10,
     home_mix_size: 12,

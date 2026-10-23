@@ -61,6 +61,7 @@ reader:
 
 rules:
   window_hours: 48             # un contenu est "nouveau" pendant 48 h
+  window_hours_media: 168      # podcasts et vidéos : 7 jours (ils sortent chaque semaine)
   keep_days: 14                # jours consultables sur le site (le reste est archivé dans le repo)
   max_per_category_per_day: 10
   home_mix_size: 12            # nombre de contenus sur la page d'accueil
@@ -149,16 +150,6 @@ categories:
         url: https://rss.nytimes.com/services/xml/rss/nyt/Books.xml
         lang: en
         weight: 0.6
-      - name: The Bookseller
-        type: rss
-        url: https://www.thebookseller.com/rss
-        lang: en
-        weight: 0.6
-      - name: Penguin Books UK — YouTube
-        type: youtube
-        handle: "@PenguinBooks"
-        lang: en
-        weight: 0.7
       - name: Booker Prize news
         type: news
         query: "Booker Prize"
@@ -194,11 +185,6 @@ categories:
         url: https://magasin-cnac.org/
         lang: fr
         weight: 1
-      - name: Ville de Grenoble — agenda
-        type: page
-        url: https://www.grenoble.fr/agenda          # à confirmer
-        lang: fr
-        weight: 1
       - name: Le Petit Bulletin Grenoble
         type: page
         url: https://www.petit-bulletin.fr/grenoble/
@@ -224,16 +210,16 @@ categories:
         url: https://www.theguardian.com/artanddesign/rss
         lang: en
         weight: 1.2
-      - name: The Art Newspaper
-        type: rss
-        url: https://www.theartnewspaper.com/rss
-        lang: en
-        weight: 0.8
       - name: Apollo Magazine
         type: rss
         url: https://www.apollo-magazine.com/feed/
         lang: en
         weight: 0.8
+      - name: Hyperallergic
+        type: rss
+        url: https://hyperallergic.com/feed/
+        lang: en
+        weight: 0.7
       - name: Beaux Arts Magazine
         type: rss
         url: https://www.beauxarts.com/feed/
@@ -318,21 +304,11 @@ categories:
         query: "Cité scolaire internationale Grenoble"
         lang: fr
         weight: 1
-      - name: Bulletin officiel de l'Éducation nationale
-        type: page
-        url: https://www.education.gouv.fr/pid285/bulletin_officiel.html     # à confirmer
-        lang: fr
-        weight: 0.8
       - name: The Guardian — Education
         type: rss
         url: https://www.theguardian.com/education/rss
         lang: en
         weight: 0.7
-      - name: British Library — English and Drama blog
-        type: rss
-        url: https://blogs.bl.uk/english-and-drama/rss.xml
-        lang: en
-        weight: 0.8
       - name: TED-Ed — YouTube
         type: youtube
         handle: "@TEDEd"
@@ -423,16 +399,16 @@ categories:
         url: https://www.placegrenet.fr/feed
         lang: fr
         weight: 0.8
-      - name: Le Dauphiné Libéré — Isère Sud
-        type: rss
-        url: https://www.ledauphine.com/isere-sud/rss      # à confirmer
-        lang: fr
-        weight: 0.8
       - name: France 3 Alpes — Isère
         type: rss
         url: https://france3-regions.franceinfo.fr/auvergne-rhone-alpes/isere/rss     # à confirmer
         lang: fr
         weight: 0.7
+      - name: Grésivaudan — sorties (actualité)
+        type: news
+        query: "Grésivaudan fête OR marché OR concert OR exposition"
+        lang: fr
+        weight: 0.9
       - name: Les Adrets (actualité)
         type: news
         query: "Les Adrets Isère"
@@ -498,11 +474,6 @@ categories:
         url: https://reasonstobecheerful.world/feed/
         lang: en
         weight: 1.2
-      - name: Fix The News
-        type: rss
-        url: https://fixthenews.com/rss/          # à confirmer
-        lang: en
-        weight: 1
       - name: Good News Network
         type: rss
         url: https://www.goodnewsnetwork.org/feed/
@@ -555,11 +526,6 @@ categories:
         url: https://www.thelocal.fr/feed/
         lang: en
         weight: 1.2
-      - name: The Connexion
-        type: rss
-        url: https://www.connexionfrance.com/rss       # à confirmer
-        lang: en
-        weight: 0.8
       - name: The Guardian — France
         type: rss
         url: https://www.theguardian.com/world/france/rss
@@ -572,11 +538,12 @@ categories:
         weight: 1
       - name: France Inter — Le journal de 8h
         type: podcast
-        search: "Le journal de 8h France Inter"
+        search: "Journal de 8h"
         lang: fr
         weight: 0.8
       - name: HugoDécrypte — Actus du jour
         type: youtube
+        channel_id: UCAcAnMF0OrCtUep3Y4M-ZPw
         handle: "@HugoDecrypte"
         lang: fr
         weight: 0.7          # à retirer si tu le trouves trop politique
@@ -630,8 +597,9 @@ categories:
         handle: "@ARTEConcert"
         lang: fr
         weight: 1
-      - name: Royal Opera House — YouTube
+      - name: Royal Ballet and Opera — YouTube
         type: youtube
+        channel_id: UCHS5XKgf2FCBF8pZllE_bjw
         handle: "@RoyalOperaHouse"
         lang: en
         weight: 1

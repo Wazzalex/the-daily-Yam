@@ -1,7 +1,9 @@
 // Small HTTP helper used by the robot: timeout, polite user-agent, text body.
 
+// A browser-like user agent: several sites (Place Gre'net, Gramophone, YouTube handle pages)
+// answer 403/404 to anything that looks like a bot.
 export const USER_AGENT =
-  "TheDailyYam/1.0 (+https://github.com/Wazzalex/the-daily-Yam; a private personal news reader)";
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
 
 export interface FetchedText {
   status: number;

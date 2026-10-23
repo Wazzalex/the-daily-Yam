@@ -228,6 +228,7 @@ Today is ${today}. The morning's mix has ${mix.length} stories. The first few:
 ${mix.slice(0, 6).map((m) => `- ${m.title} (${m.category})`).join("\n")}
 
 Write the greeting. Start with "Good morning, Yamuna." and hint at one or two things worth her attention, without listing them all.`;
-  const text = await ask(FAST_MODEL, system, user, 200);
+  // Generous max_tokens: the model's own thinking counts against it, and 200 left nothing for the answer.
+  const text = await ask(FAST_MODEL, system, user, 1200);
   return text.replace(/^["“]|["”]$/g, "").trim();
 }
