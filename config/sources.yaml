@@ -1,0 +1,677 @@
+# =====================================================================
+#  THE DAILY YAM — Base de sources
+#  ---------------------------------------------------------------------
+#  Ce fichier pilote tout le site : les rubriques du menu, leurs couleurs,
+#  ce que le robot du matin va lire à 6h, et comment Claude choisit,
+#  résume et classe les contenus pour Yamuna.
+#
+#  AJOUTER UNE SOURCE : copie un bloc "- name:" sous la rubrique voulue.
+#    type: rss      → un flux RSS/Atom                       (url)
+#    type: youtube  → une chaîne YouTube                      (handle ou channel_id)
+#    type: podcast  → un podcast                              (feed_url, apple_id ou search)
+#    type: page     → une page web que Claude lit et dont il  (url)
+#                     extrait les contenus datés (agendas, expositions…)
+#    type: news     → une recherche d'actualité Google News   (query, lang)
+#    weight         → 0.5 = secondaire · 1 = normal · 1.5–2 = favori
+#
+#  AJOUTER UNE RUBRIQUE : copie un bloc complet sous "categories:" avec un
+#  id unique (lettres minuscules), un nom, deux couleurs, une description
+#  "brief" et ses sources. L'onglet, la page, le mix de la home et le
+#  récap audio se créent tout seuls.
+#
+#  Le robot vérifie chaque source tous les matins : une source qui ne
+#  répond plus est signalée dans le rapport du jour, jamais inventée.
+#  Les lignes "# à confirmer" sont des adresses plausibles que le robot
+#  validera au premier passage.
+# =====================================================================
+
+site:
+  name: The Daily Yam
+  tagline: "Everything I love, every morning."
+  motto: "All the news that's fit for Yamuna"
+  timezone: Europe/Paris
+  refresh_hour: 6              # heure locale de la mise à jour quotidienne
+  language: en                 # langue de l'interface et des résumés
+
+reader:
+  name: Yamuna
+  # Profil utilisé par Claude pour choisir "les plus pertinents" et pour le ton du bot.
+  profile: >
+    Yamuna is an English literature teacher at an international lycée in Grenoble
+    (British section, seconde and première, soon the BFI in terminale). She loves
+    culture and fiction above all: strong characters, memorable narrators, stories
+    one can step into without needing to know the culture first, and novels that
+    teach history better than history essays do. She is drawn to the links between
+    paintings and written works, and to passages that are beautiful as language —
+    poetic, musical prose. She enjoys thrillers, documentaries about dance and
+    classical music, and good news from anywhere. She lives in Les Adrets
+    (Belledonne, above the Grésivaudan valley) and likes local exhibitions,
+    producers' markets, flea markets and concerts.
+  loves:
+    - fiction with strong characters and narrators
+    - poetic, beautifully written passages
+    - history learned through novels
+    - connections between paintings and literature
+    - thrillers, dance and classical-music documentaries
+    - good news, local life around Les Adrets and Grenoble
+  avoids:
+    - party politics, economics, polemics
+    - celebrity gossip
+    - cinema box-office and film-industry news (low priority)
+
+rules:
+  window_hours: 48             # un contenu est "nouveau" pendant 48 h
+  keep_days: 14                # jours consultables sur le site (le reste est archivé dans le repo)
+  max_per_category_per_day: 10
+  home_mix_size: 12            # nombre de contenus sur la page d'accueil
+  summary_language: en         # résumés toujours en anglais, titre d'origine conservé
+  prefer_english_sources: true # à pertinence égale, la source anglaise gagne
+  audio_recap_minutes: 6       # récap audio par rubrique (bouton "long version" = 12)
+  audio_recap_long_minutes: 12
+  # Sources interdites : rien n'est repris de ces domaines, même via Google News.
+  blocked_domains:
+    - cnews.fr
+    - bfmtv.com
+    - europe1.fr
+    - lejdd.fr
+    - valeursactuelles.com
+    - causeur.fr
+    - bvoltaire.fr
+    - frontieresmedia.fr
+    - livrenoir.fr
+    - sudradio.fr
+    # À trancher par toi (décommente pour bloquer) :
+    # - lefigaro.fr
+    # - lepoint.fr
+
+categories:
+
+  # -------------------------------------------------------------------
+  - id: literature
+    name: Literature
+    tagline: "New in English-language books, from the last 48 hours."
+    color:
+      ink: "#7E3B5A"
+      tint: "#F6E7EE"
+    brief: >
+      English-language literature: new releases, reviews, author interviews,
+      prizes, poetry, essays about reading, and anything that links novels to
+      painting, music or history. Favour pieces about the writing itself —
+      narrators, style, memorable characters — over publishing-industry news.
+    sources:
+      - name: The Guardian — Books
+        type: rss
+        url: https://www.theguardian.com/books/rss
+        lang: en
+        weight: 1.5
+      - name: The Guardian Books Podcast
+        type: podcast
+        search: "The Guardian Books Podcast"
+        lang: en
+        weight: 1
+      - name: BBC Radio 4 — Open Book
+        type: podcast
+        search: "Open Book BBC Radio 4"
+        lang: en
+        weight: 1.5
+      - name: BBC Radio 4 — Bookclub
+        type: podcast
+        search: "Bookclub BBC Radio 4"
+        lang: en
+        weight: 1
+      - name: Backlisted
+        type: podcast
+        search: "Backlisted podcast"
+        lang: en
+        weight: 1
+      - name: London Review of Books
+        type: rss
+        url: https://www.lrb.co.uk/feeds/rss
+        lang: en
+        weight: 1
+      - name: Literary Hub
+        type: rss
+        url: https://lithub.com/feed/
+        lang: en
+        weight: 1
+      - name: The Paris Review — The Daily
+        type: rss
+        url: https://www.theparisreview.org/blog/feed/
+        lang: en
+        weight: 1
+      - name: The New Yorker — Books
+        type: rss
+        url: https://www.newyorker.com/feed/books/page-turner
+        lang: en
+        weight: 0.8
+      - name: The New York Times — Books
+        type: rss
+        url: https://rss.nytimes.com/services/xml/rss/nyt/Books.xml
+        lang: en
+        weight: 0.6
+      - name: The Bookseller
+        type: rss
+        url: https://www.thebookseller.com/rss
+        lang: en
+        weight: 0.6
+      - name: Penguin Books UK — YouTube
+        type: youtube
+        handle: "@PenguinBooks"
+        lang: en
+        weight: 0.7
+      - name: Booker Prize news
+        type: news
+        query: "Booker Prize"
+        lang: en
+        weight: 0.8
+
+  # -------------------------------------------------------------------
+  - id: art
+    name: Art
+    tagline: "Exhibitions around Grenoble, and the art stories worth the detour."
+    color:
+      ink: "#2E6F6A"
+      tint: "#E2F1EE"
+    brief: >
+      Visual arts with Grenoble first: exhibitions opening or closing at the
+      Musée de Grenoble, the Isère museums, the Magasin CNAC and the city's
+      galleries, then Lyon, then the major international shows and stories.
+      Favour pieces that explain a painting, an artist or a movement, and
+      anything connecting art to literature.
+    sources:
+      - name: Musée de Grenoble — expositions
+        type: page
+        url: https://www.museedegrenoble.fr/
+        lang: fr
+        weight: 1.5
+      - name: Musées de l'Isère — agenda
+        type: page
+        url: https://musees.isere.fr/
+        lang: fr
+        weight: 1.2
+      - name: Le Magasin CNAC
+        type: page
+        url: https://magasin-cnac.org/
+        lang: fr
+        weight: 1
+      - name: Ville de Grenoble — agenda
+        type: page
+        url: https://www.grenoble.fr/agenda          # à confirmer
+        lang: fr
+        weight: 1
+      - name: Le Petit Bulletin Grenoble
+        type: page
+        url: https://www.petit-bulletin.fr/grenoble/
+        lang: fr
+        weight: 1
+      - name: Place Gre'net — Culture
+        type: rss
+        url: https://www.placegrenet.fr/category/culture/feed     # à confirmer
+        lang: fr
+        weight: 0.8
+      - name: Expositions à Grenoble (actualité)
+        type: news
+        query: "exposition Grenoble"
+        lang: fr
+        weight: 1
+      - name: Expositions à Lyon (actualité)
+        type: news
+        query: "exposition musée Lyon"
+        lang: fr
+        weight: 0.6
+      - name: The Guardian — Art and design
+        type: rss
+        url: https://www.theguardian.com/artanddesign/rss
+        lang: en
+        weight: 1.2
+      - name: The Art Newspaper
+        type: rss
+        url: https://www.theartnewspaper.com/rss
+        lang: en
+        weight: 0.8
+      - name: Apollo Magazine
+        type: rss
+        url: https://www.apollo-magazine.com/feed/
+        lang: en
+        weight: 0.8
+      - name: Beaux Arts Magazine
+        type: rss
+        url: https://www.beauxarts.com/feed/
+        lang: fr
+        weight: 0.7
+      - name: BBC Radio 4 — Front Row
+        type: podcast
+        search: "Front Row BBC Radio 4"
+        lang: en
+        weight: 1
+      - name: Great Art Explained — YouTube
+        type: youtube
+        handle: "@GreatArtExplained"
+        lang: en
+        weight: 1.2
+      - name: The National Gallery — YouTube
+        type: youtube
+        handle: "@nationalgallery"
+        lang: en
+        weight: 0.8
+
+  # -------------------------------------------------------------------
+  - id: bfi
+    name: BFI corner
+    tagline: "Everything around this year's BFI programme, its works and its people."
+    color:
+      ink: "#3A5E95"
+      tint: "#E5ECF7"
+    brief: >
+      The Baccalauréat Français International, British section: official texts
+      and reforms, the ACL programme and its works (adaptations, new editions,
+      stage productions, anniversaries, interviews with authors), teaching ideas,
+      talks and videos usable in class, and news about international sections.
+      Favour what helps a teacher of seconde, première and terminale.
+    # Œuvres au programme → le robot crée automatiquement une recherche d'actualité par œuvre.
+    # Source : BO n° 17 du 24 avril 2025 (ACL anglais britannique) et annexe session 2028.
+    works:
+      session_2027:            # première en 2025-26, terminale en 2026-27
+        - Twelfth Night (Shakespeare)
+        - Hamlet (Shakespeare)
+        - Great Expectations (Dickens)
+        - The Secret Agent (Conrad)
+        - Brick Lane (Monica Ali)
+        - The Rivals (Sheridan)
+        - Dancing at Lughnasa (Brian Friel)
+        - Under Milk Wood (Dylan Thomas)
+        - Songs of Innocence and of Experience (Blake)
+        - Gillian Clarke poet
+        - Birthday Letters (Ted Hughes)
+      session_2028:            # seconde en 2025-26, première en 2026-27
+        - Tess of the d'Urbervilles (Hardy)
+        - The Return of the Soldier (Rebecca West)
+        - A Raisin in the Sun (Hansberry)
+        - Robert Browning dramatic monologues
+        - Sujata Bhatt poet
+      oral_themes:             # thèmes d'oral communs aux deux sessions
+        - The Handmaid's Tale (Atwood)
+        - 1984 (Orwell)
+        - Never Let Me Go (Ishiguro)
+        - Prophet Song (Paul Lynch)
+        - Parable of the Sower (Octavia Butler)
+        - The Road (Cormac McCarthy)
+        - Atonement (McEwan)
+        - Emma (Jane Austen)
+        - The Go-Between (Hartley)
+        - I Know Why the Caged Bird Sings (Maya Angelou)
+        - Anita and Me (Meera Syal)
+        - Sweet Sorrow (David Nicholls)
+    sources:
+      - name: Baccalauréat français international (actualité)
+        type: news
+        query: "baccalauréat français international"
+        lang: fr
+        weight: 1.5
+      - name: Sections internationales britanniques (actualité)
+        type: news
+        query: "section internationale britannique lycée"
+        lang: fr
+        weight: 1
+      - name: Cité scolaire internationale de Grenoble (actualité)
+        type: news
+        query: "Cité scolaire internationale Grenoble"
+        lang: fr
+        weight: 1
+      - name: Bulletin officiel de l'Éducation nationale
+        type: page
+        url: https://www.education.gouv.fr/pid285/bulletin_officiel.html     # à confirmer
+        lang: fr
+        weight: 0.8
+      - name: The Guardian — Education
+        type: rss
+        url: https://www.theguardian.com/education/rss
+        lang: en
+        weight: 0.7
+      - name: British Library — English and Drama blog
+        type: rss
+        url: https://blogs.bl.uk/english-and-drama/rss.xml
+        lang: en
+        weight: 0.8
+      - name: TED-Ed — YouTube
+        type: youtube
+        handle: "@TEDEd"
+        lang: en
+        weight: 1.2
+      - name: TED Talks Education
+        type: podcast
+        search: "TED Talks Education"
+        lang: en
+        weight: 1
+      - name: Royal Shakespeare Company — YouTube
+        type: youtube
+        handle: "@thersc"
+        lang: en
+        weight: 1
+      - name: Shakespeare's Globe — YouTube
+        type: youtube
+        handle: "@shakespearesglobe"
+        lang: en
+        weight: 0.8
+      - name: Margaret Atwood (actualité)
+        type: news
+        query: "Margaret Atwood"
+        lang: en
+        weight: 1
+      - name: Teaching English literature (actualité)
+        type: news
+        query: "teaching English literature secondary"
+        lang: en
+        weight: 0.5
+
+  # -------------------------------------------------------------------
+  - id: around
+    name: Around me
+    tagline: "What's on within half an hour of Les Adrets."
+    color:
+      ink: "#4B6E3E"
+      tint: "#E8F0E2"
+    brief: >
+      Local life within about 30 km of Les Adrets (38190): exhibitions, flea
+      markets and brocantes, producers' markets, concerts, village fêtes,
+      walks and seasonal events in Belledonne, the Grésivaudan valley
+      (Crolles, Pontcharra, Allevard), Grenoble and its metropolis, and
+      Chambéry. Give the date and place first. Skip road works, crime and
+      local politics.
+    geo:
+      center: "Les Adrets, Isère (38190)"
+      radius_km: 30
+      places: [Les Adrets, Prapoutel, Les 7 Laux, Theys, Allevard, Pontcharra, Crolles, Bernin, Saint-Ismier, Meylan, Grenoble, Échirolles, Chambéry, Belledonne, Grésivaudan, Chartreuse]
+    sources:
+      - name: Isère Attractivité — agenda
+        type: page
+        url: https://www.alpes-isere.com/decouvrir-l-isere/agenda/evenements/
+        lang: fr
+        weight: 1.5
+      - name: Isère Culture — agenda
+        type: page
+        url: https://culture.isere.fr/
+        lang: fr
+        weight: 1.2
+      - name: Le Grésivaudan — agenda
+        type: page
+        url: https://www.le-gresivaudan.fr/          # à confirmer
+        lang: fr
+        weight: 1.2
+      - name: Les 7 Laux
+        type: page
+        url: https://www.les7laux.com/
+        lang: fr
+        weight: 1
+      - name: MC2 Grenoble
+        type: page
+        url: https://www.mc2grenoble.fr/
+        lang: fr
+        weight: 1
+      - name: Hexagone — Scène nationale Meylan
+        type: page
+        url: https://www.theatre-hexagone.eu/
+        lang: fr
+        weight: 0.8
+      - name: Vide-greniers en Isère
+        type: page
+        url: https://vide-greniers.org/38-Isere      # à confirmer
+        lang: fr
+        weight: 1
+      - name: Place Gre'net
+        type: rss
+        url: https://www.placegrenet.fr/feed
+        lang: fr
+        weight: 0.8
+      - name: Le Dauphiné Libéré — Isère Sud
+        type: rss
+        url: https://www.ledauphine.com/isere-sud/rss      # à confirmer
+        lang: fr
+        weight: 0.8
+      - name: France 3 Alpes — Isère
+        type: rss
+        url: https://france3-regions.franceinfo.fr/auvergne-rhone-alpes/isere/rss     # à confirmer
+        lang: fr
+        weight: 0.7
+      - name: Les Adrets (actualité)
+        type: news
+        query: "Les Adrets Isère"
+        lang: fr
+        weight: 1.5
+      - name: Grésivaudan (actualité)
+        type: news
+        query: "Grésivaudan"
+        lang: fr
+        weight: 1
+      - name: Belledonne (actualité)
+        type: news
+        query: "Belledonne"
+        lang: fr
+        weight: 1
+      - name: Brocantes et vide-greniers (actualité)
+        type: news
+        query: "brocante vide-greniers Grésivaudan"
+        lang: fr
+        weight: 1
+      - name: Marchés de producteurs (actualité)
+        type: news
+        query: "marché de producteurs Isère"
+        lang: fr
+        weight: 0.8
+      - name: Concerts à Grenoble (actualité)
+        type: news
+        query: "concert Grenoble"
+        lang: fr
+        weight: 0.8
+      - name: Allevard et Pontcharra (actualité)
+        type: news
+        query: "Allevard OR Pontcharra"
+        lang: fr
+        weight: 0.7
+      - name: Chambéry sorties (actualité)
+        type: news
+        query: "Chambéry exposition OR concert"
+        lang: fr
+        weight: 0.5
+
+  # -------------------------------------------------------------------
+  - id: good
+    name: Good news
+    tagline: "Something went right today. Here's where."
+    color:
+      ink: "#8C5E00"
+      tint: "#FBF0D2"
+    brief: >
+      Genuinely good news from any field — science, nature, health, education,
+      communities, culture, kindness — anywhere in the world. Prefer concrete
+      outcomes over promises. Also flag uplifting stories found in the other
+      sections.
+    cross_post_from_all: true   # Claude peut y reclasser une bonne nouvelle trouvée ailleurs
+    sources:
+      - name: Positive News
+        type: rss
+        url: https://www.positive.news/feed/
+        lang: en
+        weight: 1.5
+      - name: Reasons to be Cheerful
+        type: rss
+        url: https://reasonstobecheerful.world/feed/
+        lang: en
+        weight: 1.2
+      - name: Fix The News
+        type: rss
+        url: https://fixthenews.com/rss/          # à confirmer
+        lang: en
+        weight: 1
+      - name: Good News Network
+        type: rss
+        url: https://www.goodnewsnetwork.org/feed/
+        lang: en
+        weight: 1
+      - name: The Optimist Daily
+        type: rss
+        url: https://www.optimistdaily.com/feed/
+        lang: en
+        weight: 0.8
+      - name: Upworthy
+        type: rss
+        url: https://www.upworthy.com/feeds/feed.rss     # à confirmer
+        lang: en
+        weight: 0.6
+      - name: Positivr
+        type: rss
+        url: https://positivr.fr/feed/
+        lang: fr
+        weight: 0.6
+
+  # -------------------------------------------------------------------
+  - id: france
+    name: France
+    tagline: "The day in France, simply told."
+    color:
+      ink: "#A0463A"
+      tint: "#F9E7E2"
+    brief: >
+      A light, general follow-up of French news for someone who does not
+      follow politics or the economy: the day's main stories told simply,
+      weather and transport, schools and education, culture, daily life,
+      plus La Mire's daily video. Skip party politics, polemics, markets,
+      and anything too specialised. English-language sources first.
+    sources:
+      - name: La Mire — YouTube (daily)
+        type: youtube
+        channel_id: UCfHFSfnaNMVSAmSM-v1rqEw
+        handle: "@lamirezapping"
+        lang: fr
+        weight: 2
+        always_include: true    # la vidéo du jour remonte toujours
+      - name: France 24 — France (English)
+        type: rss
+        url: https://www.france24.com/en/france/rss
+        lang: en
+        weight: 1.5
+      - name: The Local France
+        type: rss
+        url: https://www.thelocal.fr/feed/
+        lang: en
+        weight: 1.2
+      - name: The Connexion
+        type: rss
+        url: https://www.connexionfrance.com/rss       # à confirmer
+        lang: en
+        weight: 0.8
+      - name: The Guardian — France
+        type: rss
+        url: https://www.theguardian.com/world/france/rss
+        lang: en
+        weight: 1
+      - name: franceinfo — Les titres
+        type: rss
+        url: https://www.francetvinfo.fr/titres.rss
+        lang: fr
+        weight: 1
+      - name: France Inter — Le journal de 8h
+        type: podcast
+        search: "Le journal de 8h France Inter"
+        lang: fr
+        weight: 0.8
+      - name: HugoDécrypte — Actus du jour
+        type: youtube
+        handle: "@HugoDecrypte"
+        lang: fr
+        weight: 0.7          # à retirer si tu le trouves trop politique
+
+  # -------------------------------------------------------------------
+  - id: watch
+    name: What to watch
+    tagline: "Thrillers, dance and music on your screens this week."
+    color:
+      ink: "#41454F"
+      tint: "#ECEDF0"
+    brief: >
+      What is worth watching on Netflix, Disney+, HBO Max, Canal+ and Arte:
+      new thriller series, documentaries about dance and classical music,
+      filmed ballet, opera and concerts, good TV drama and literary
+      adaptations. Cinema releases are low priority. Say which platform.
+    platforms: [Netflix, Disney+, HBO Max, Canal+, Arte]
+    sources:
+      - name: The Guardian — TV and radio
+        type: rss
+        url: https://www.theguardian.com/tv-and-radio/rss
+        lang: en
+        weight: 1.5
+      - name: The Guardian — Classical music and opera
+        type: rss
+        url: https://www.theguardian.com/music/classicalmusicandopera/rss
+        lang: en
+        weight: 1
+      - name: The Guardian — Dance
+        type: rss
+        url: https://www.theguardian.com/stage/dance/rss
+        lang: en
+        weight: 1
+      - name: BBC — Entertainment and arts
+        type: rss
+        url: https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml
+        lang: en
+        weight: 0.8
+      - name: Radio Times
+        type: rss
+        url: https://www.radiotimes.com/feed/       # à confirmer
+        lang: en
+        weight: 0.8
+      - name: What's on Netflix
+        type: rss
+        url: https://www.whats-on-netflix.com/feed/
+        lang: en
+        weight: 0.8
+      - name: ARTE Concert — YouTube
+        type: youtube
+        handle: "@ARTEConcert"
+        lang: fr
+        weight: 1
+      - name: Royal Opera House — YouTube
+        type: youtube
+        handle: "@RoyalOperaHouse"
+        lang: en
+        weight: 1
+      - name: BBC Radio 3 — Music Matters
+        type: podcast
+        search: "Music Matters BBC Radio 3"
+        lang: en
+        weight: 0.8
+      - name: Gramophone
+        type: rss
+        url: https://www.gramophone.co.uk/rss        # à confirmer
+        lang: en
+        weight: 0.7
+      - name: Dance Magazine
+        type: rss
+        url: https://www.dancemagazine.com/feed/
+        lang: en
+        weight: 0.7
+      - name: New thriller series (actualité)
+        type: news
+        query: "new thriller series streaming"
+        lang: en
+        weight: 1
+      - name: Dance documentaries (actualité)
+        type: news
+        query: "dance documentary"
+        lang: en
+        weight: 1
+      - name: Classical music documentaries (actualité)
+        type: news
+        query: "classical music documentary"
+        lang: en
+        weight: 0.8
+      - name: Arte — documentaires et séries (actualité)
+        type: news
+        query: "Arte documentaire OR série"
+        lang: fr
+        weight: 0.8
+      - name: Canal+ séries (actualité)
+        type: news
+        query: "Canal+ nouvelle série"
+        lang: fr
+        weight: 0.6

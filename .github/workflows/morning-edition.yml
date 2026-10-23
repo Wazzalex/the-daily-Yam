@@ -1,0 +1,90 @@
+# The morning robot: runs every day at 06:00 Europe/Paris, reads the sources,
+# asks Claude to summarise and rank them, commits the edition into data/,
+# and Vercel redeploys the site from that commit.
+
+name: Morning edition
+
+on:
+  schedule:
+    # GitHub cron is UTC. 04:00 UTC = 06:00 Paris in summer, 05:00 UTC = 06:00 Paris in winter.
+    # A guard step below keeps only the run that lands at 06:00 local time.
+    - cron: "0 4 * * *"
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+    inputs:
+      category:
+        description: "Only one section (id from config/sources.yaml), empty = all"
+        required: false
+        default: ""
+      dry_run:
+        description: "Dry run: only check that sources answer (no Claude, nothing committed)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: morning-edition
+  cancel-in-progress: false
+
+jobs:
+  edition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Is it six o'clock in Paris?
+        id: gate
+        run: |
+          HOUR=$(TZ=Europe/Paris date +%H)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$HOUR" = "06" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "It is ${HOUR}h in Paris — running the edition."
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "It is ${HOUR}h in Paris — not this one, skipping."
+          fi
+
+      - name: Check out the repository
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Node
+        if: steps.gate.outputs.run == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+
+      - name: Run the robot
+        if: steps.gate.outputs.run == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TZ: Europe/Paris
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.category }}" ]; then ARGS="$ARGS --category=${{ github.event.inputs.category }}"; fi
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
+          npx tsx scripts/aggregate.ts $ARGS
+
+      - name: Commit today's edition
+        if: steps.gate.outputs.run == 'true' && github.event.inputs.dry_run != 'true'
+        run: |
+          git config user.name "The Daily Yam robot"
+          git config user.email "robot@thedailyyam.local"
+          git add data
+          if [ -f package-lock.json ]; then git add package-lock.json; fi
+          if git diff --cached --quiet; then
+            echo "Nothing new to commit."
+          else
+            DATE=$(TZ=Europe/Paris date +%Y-%m-%d)
+            git commit -m "Edition of $DATE"
+            git pull --rebase origin main || true
+            git push origin HEAD:main
+          fi

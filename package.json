@@ -1,0 +1,38 @@
+{
+  "name": "the-daily-yam",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Everything I love, every morning — a private morning paper for Yamuna.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "prebuild": "node scripts/build-icons.mjs",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "aggregate": "tsx scripts/aggregate.ts",
+    "check-sources": "tsx scripts/aggregate.ts --dry-run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.1.0",
+    "cheerio": "1.2.0",
+    "fuse.js": "7.5.0",
+    "js-yaml": "4.3.2",
+    "next": "16.4.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "rss-parser": "3.13.0"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "2.6.2",
+    "@types/js-yaml": "4.0.9",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  }
+}
