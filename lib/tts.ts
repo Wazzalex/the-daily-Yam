@@ -14,7 +14,8 @@ export interface VoiceSettings {
 }
 
 const OPENAI_URL = "https://api.openai.com/v1/audio/speech";
-const MAX_CHARS = 3500; // the speech endpoint takes about 4,000 characters per request
+const MAX_CHARS = 1800; // smaller pieces, more of them in parallel: the speech API runs at ~6× real time per request
+const CONCURRENCY = 6;
 
 export function ttsAvailable(): { ok: boolean; reason?: string } {
   if (!process.env.OPENAI_API_KEY) return { ok: false, reason: "OPENAI_API_KEY is not set" };
@@ -103,7 +104,7 @@ export async function synthesize(text: string, s: VoiceSettings): Promise<Buffer
   const buffers: Buffer[] = new Array(chunks.length);
   let next = 0;
   await Promise.all(
-    Array.from({ length: Math.min(3, chunks.length) }, async () => {
+    Array.from({ length: Math.min(CONCURRENCY, chunks.length) }, async () => {
       while (next < chunks.length) {
         const i = next++;
         buffers[i] = await speakChunk(chunks[i], s);

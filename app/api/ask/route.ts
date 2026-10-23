@@ -7,7 +7,7 @@ import type { Item } from "@/lib/types";
 // "Ask the Yam": answers from today's stories first, with a web search in reserve.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 const MODEL = process.env.YAM_SMART_MODEL ?? "claude-sonnet-5-5";
 const DAILY_LIMIT = Number(process.env.YAM_BOT_DAILY_LIMIT ?? 200);

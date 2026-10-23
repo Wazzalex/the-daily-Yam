@@ -230,7 +230,7 @@ export function RecapPlayer(props: Props) {
   useEffect(() => () => stop(), [stop]);
 
   const label = useMemo(() => {
-    if (status === "loading") return usingBrowser ? "Starting…" : "Preparing your recap… a few seconds the first time";
+    if (status === "loading") return usingBrowser ? "Starting…" : longMode ? "Preparing the long version… up to a minute the first time" : "Preparing your recap… about half a minute the first time";
     if (status === "playing") return kind === "briefing" ? "Playing the morning briefing" : `Playing the ${categoryName} recap`;
     if (status === "paused") return "Paused — tap to resume";
     if (status === "ended") return "That's all — tap to listen again";

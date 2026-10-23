@@ -10,7 +10,7 @@ import { SAMPLE_TEXT, briefingAudioPath, ensureAudio, findAudio, sampleAudioPath
 // element can use this URL as its src straight from a tap. ?json=1 returns {url} instead.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300; // Hobby plan allows up to 300 s with Fluid compute; a 12-minute recap needs ~40 s
 
 const DAILY_GENERATION_LIMIT = Number(process.env.YAM_AUDIO_DAILY_LIMIT ?? 60);
 let generated = { day: "", count: 0 };
@@ -70,7 +70,7 @@ export async function GET(req: Request) {
       generated.count += 1;
       target = (await ensureAudio(pathname, text, voice)).url;
     }
-    if (wantJson) return Response.json({ url: target, voice: voice.voice }, { headers: { "cache-control": "no-store" } });
+    if (wantJson) return Response.json({ url: target, voice: voice.voice }, { headers: { "cache-control": "no-store", "x-yam-audio": "2" } });
     return new Response(null, { status: 302, headers: { location: target, "cache-control": "no-store" } });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown error";
