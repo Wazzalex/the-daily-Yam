@@ -12,8 +12,10 @@
 
 import { loadConfig } from "../lib/config";
 import { parisDateKey } from "../lib/format";
-import type { CategoryConfig, DayEdition, Item, Recap, SourceConfig, SourceReport } from "../lib/types";
-import { enrichItems, extractItemsFromPage, usage, writeGreeting, writeRecap } from "./lib/claude";
+import type { Briefing, CategoryConfig, DayEdition, Item, Recap, SourceConfig, SourceReport } from "../lib/types";
+import { enrichItems, extractItemsFromPage, usage, writeBriefing, writeGreeting, writeRecap } from "./lib/claude";
+import { briefingAudioPath, ensureAudio, estimateSeconds, sectionAudioPath, settingsFor, ttsAvailable } from "../lib/tts";
+import { cleanupOldAudio } from "./lib/audio-cleanup";
 import {
   fetchNews,
   fetchPage,
@@ -295,6 +297,58 @@ async function main() {
     });
   }
 
+  // The morning briefing: one spoken piece across every section, from today's mix plus each section's best.
+  let briefing: Briefing | undefined;
+  if (!NO_RECAPS && mix.length) {
+    const names = new Map(config.categories.map((c) => [c.id, c.name]));
+    const picked = new Map<string, Item>();
+    for (const i of mix) picked.set(i.id, i);
+    for (const cat of config.categories) {
+      for (const i of todays.filter((x) => x.category === cat.id).sort((a, b) => b.relevance - a.relevance).slice(0, 2)) picked.set(i.id, i);
+    }
+    const material = [...picked.values()].slice(0, 18).map((i) => ({ ...i, categoryName: names.get(i.category) ?? i.category }));
+    try {
+      const b = await writeBriefing(config, material, config.audio.briefing_minutes, today);
+      briefing = { text: b.text, words: b.words, itemIds: material.map((i) => i.id) };
+      log(`  briefing: ${b.words} words`);
+    } catch (err) {
+      log(`briefing failed: ${(err as Error).message}`);
+    }
+  }
+
+  // Premium voice: pre-generate what the config asks for, so it is instant at seven.
+  const tts = ttsAvailable();
+  if (config.audio.provider === "openai" && !tts.ok) log(`audio: skipped (${tts.reason})`);
+  if (config.audio.provider === "openai" && tts.ok) {
+    const voice = settingsFor(config.audio);
+    if (briefing && config.audio.pregenerate_briefing) {
+      try {
+        const r = await ensureAudio(briefingAudioPath(today, briefing.text, voice), briefing.text, voice);
+        briefing.audio = { url: r.url, voice: voice.voice, seconds: estimateSeconds(briefing.text) };
+        log(`  audio: briefing ${r.generated ? "generated" : "already there"}`);
+      } catch (err) {
+        log(`  audio: briefing failed: ${(err as Error).message}`);
+      }
+    }
+    if (config.audio.pregenerate_sections) {
+      await mapLimit(Object.entries(recaps), 2, async ([catId, recap]) => {
+        if (!recap.itemIds.length) return;
+        try {
+          await ensureAudio(sectionAudioPath(today, catId, "short", recap.short, voice), recap.short, voice);
+          log(`  audio: ${catId} short ready`);
+        } catch (err) {
+          log(`  audio: ${catId} failed: ${(err as Error).message}`);
+        }
+      });
+    }
+    try {
+      const removed = await cleanupOldAudio(config.rules.keep_days, today);
+      if (removed) log(`  audio: removed ${removed} old file(s)`);
+    } catch (err) {
+      log(`  audio: cleanup failed: ${(err as Error).message}`);
+    }
+  }
+
   let greeting = `Good morning, Yamuna. Your ${new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: "Europe/Paris" }).format(now)} edition is ready.`;
   if (mix.length) {
     try {
@@ -313,6 +367,7 @@ async function main() {
     mix: mix.map((i) => i.id),
     newByCategory,
     recaps,
+    briefing,
     sources: reports.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name)),
     usage: { ...usage },
   };

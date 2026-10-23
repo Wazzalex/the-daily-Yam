@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
   // The bot reads the config and the day's data at request time: ship them with the function.
   outputFileTracingIncludes: {
     "/api/ask": ["./config/**/*", "./data/**/*"],
+    "/api/audio": ["./config/**/*", "./data/**/*"],
   },
   async headers() {
     return [

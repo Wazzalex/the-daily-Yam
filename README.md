@@ -32,10 +32,21 @@ config/sources.yaml  ──►  scripts/aggregate.ts (GitHub Actions, 6h)  ─�
 
 Toute modification de `config/sources.yaml` poussée sur `main` est prise en compte au prochain passage du robot.
 
+## La voix
+
+Les récaps sont lus par une voix britannique générée par OpenAI (`gpt-4o-mini-tts`, pilotée par la consigne `audio.instructions` de `config/sources.yaml`) et stockés dans un espace Vercel Blob (`yam-audio`) :
+
+- le **briefing du matin** (toutes rubriques, 6 min) est généré par le robot à 6h, prêt au réveil ;
+- les **récaps par rubrique** (6 et 12 min) sont générés **au premier appui sur lecture** par `/api/audio`, puis réutilisés pendant 14 jours ;
+- la page **/voices** fait entendre chaque voix sur le même paragraphe ; « Use this voice » mémorise le choix sur le téléphone ;
+- sans clé OpenAI ou sans Blob, le site retombe sur la voix du téléphone.
+
+Réglages dans `config/sources.yaml` → `audio` : voix par défaut, liste des voix, consigne d'accent, durée du briefing, pré-génération des rubriques.
+
 ## Secrets et réglages
 
-- **GitHub** → Settings → Secrets and variables → Actions → `ANTHROPIC_API_KEY` (pour le robot).
-- **Vercel** → Project → Settings → Environment Variables → `ANTHROPIC_API_KEY` (pour le bot).
+- **GitHub** → Settings → Secrets and variables → Actions → `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `BLOB_READ_WRITE_TOKEN` (pour le robot).
+- **Vercel** → Project → Settings → Environment Variables → les trois mêmes (pour le bot et la voix à la demande).
 - Optionnel : `YAM_FAST_MODEL` (défaut `claude-haiku-5-5`), `YAM_SMART_MODEL` (défaut `claude-sonnet-5-5`), `YAM_BOT_DAILY_LIMIT` (défaut 200 questions/jour).
 
 ## En local (pour les curieux)

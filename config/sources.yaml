@@ -85,6 +85,22 @@ rules:
     # - lefigaro.fr
     # - lepoint.fr
 
+# Voix des récaps audio. "openai" = voix premium générée à la demande et mise en cache ;
+# "browser" = la voix du téléphone (gratuite, moins belle).
+audio:
+  provider: openai
+  model: gpt-4o-mini-tts
+  voice: marin                   # voix par défaut ; Yamuna peut en choisir une autre sur /voices
+  voices: [marin, cedar, fable, sage, nova, shimmer]
+  instructions: >
+    Warm, unhurried British English (Received Pronunciation), like a seasoned
+    BBC Radio 4 presenter reading the morning briefing to a single listener.
+    Clear diction, gentle warmth, natural pauses between stories, never salesy.
+  speed: 1.0
+  briefing_minutes: 6            # le briefing du matin, toutes rubriques confondues
+  pregenerate_briefing: true     # généré à 6h pour être prêt au réveil (≈ 0,10 €/jour)
+  pregenerate_sections: false    # true = les 7 récaps courts aussi (≈ 0,70 €/jour de plus)
+
 categories:
 
   # -------------------------------------------------------------------

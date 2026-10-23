@@ -218,6 +218,29 @@ ${list}`;
   return { text, words: countWords(text) };
 }
 
+// ---------------------------------------------------------------- morning briefing (all sections)
+
+export async function writeBriefing(
+  config: SiteConfig,
+  items: Array<Item & { categoryName: string }>,
+  minutes: number,
+  today: string,
+): Promise<{ text: string; words: number }> {
+  const targetWords = Math.round(minutes * 150);
+  const system = `You write a short spoken morning briefing for one listener, read aloud by a text-to-speech voice. British English, warm, clear, unhurried — a Radio 4 presenter reading to a friend. No headings, bullet points, URLs, emojis or stage directions. Write numbers and dates as words where natural. Name the outlet when it helps.`;
+  const list = items
+    .map((it, i) => `${i + 1}. [${it.categoryName} · ${it.type}] ${it.title} — ${it.source}${it.eventDate ? ` — ${it.eventDate}${it.eventPlace ? ", " + it.eventPlace : ""}` : ""}\n   ${it.summary}`)
+    .join("\n");
+  const user = `${readerBlock(config)}
+
+Today is ${today}. Write "The Daily Yam" morning briefing for Yamuna, about ${targetWords} words (${minutes} minutes aloud), covering the best of every section below. Open with "Good morning, Yamuna" and the day of the week, move through the stories grouped by section or theme with a light transition between them, give each enough detail to be useful, and end with one warm sign-off sentence. Use only the facts below.
+
+STORIES:
+${list}`;
+  const text = await ask(SMART_MODEL, system, user, Math.min(8000, targetWords * 3 + 500));
+  return { text, words: countWords(text) };
+}
+
 // ---------------------------------------------------------------- greeting
 
 export async function writeGreeting(config: SiteConfig, mix: Item[], today: string): Promise<string> {

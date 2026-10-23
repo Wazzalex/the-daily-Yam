@@ -51,15 +51,20 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
           </div>
           <h1 className="band__title">{cat.name}</h1>
           {cat.tagline ? <p className="band__tagline">{cat.tagline}</p> : null}
-          {recap ? (
+          {recap && edition ? (
             <div style={{ marginTop: 14 }}>
               <RecapPlayer
+                kind="section"
+                category={cat.id}
+                categoryName={cat.name}
+                date={edition.date}
                 short={recap.short}
                 long={recap.long}
                 wordsShort={recap.wordsShort}
                 wordsLong={recap.wordsLong}
                 stories={recap.itemIds.length}
-                categoryName={cat.name}
+                provider={config.audio.provider}
+                defaultVoice={config.audio.voice}
               />
             </div>
           ) : null}

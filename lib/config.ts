@@ -42,6 +42,22 @@ export function loadConfig(): SiteConfig {
   };
   const given = (raw.rules ?? {}) as Partial<SiteConfig["rules"]>;
   raw.rules = { ...defaults, ...given };
+
+  const audioDefaults: SiteConfig["audio"] = {
+    provider: "openai",
+    model: "gpt-4o-mini-tts",
+    voice: "marin",
+    voices: ["marin", "cedar", "fable", "sage", "nova", "shimmer"],
+    instructions:
+      "Warm, unhurried British English (Received Pronunciation), like a seasoned BBC Radio 4 presenter reading the morning briefing to a single listener. Clear diction, gentle warmth, natural pauses between stories, never salesy.",
+    speed: 1,
+    briefing_minutes: 6,
+    pregenerate_briefing: true,
+    pregenerate_sections: false,
+  };
+  const audioGiven = ((raw as Partial<SiteConfig>).audio ?? {}) as Partial<SiteConfig["audio"]>;
+  raw.audio = { ...audioDefaults, ...audioGiven };
+  if (!raw.audio.voices.includes(raw.audio.voice)) raw.audio.voices.unshift(raw.audio.voice);
   cached = raw;
   return raw;
 }
@@ -51,4 +67,4 @@ export function getCategory(id: string): CategoryConfig | undefined {
 }
 
 /** Reserved top-level routes that a category id may not shadow. */
-export const RESERVED_SLUGS = new Set(["search", "api", "about", "_next"]);
+export const RESERVED_SLUGS = new Set(["search", "api", "about", "voices", "_next"]);

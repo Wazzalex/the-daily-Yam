@@ -42,6 +42,34 @@ export interface Recap {
   wordsLong: number;
 }
 
+export interface AudioRef {
+  url: string;
+  voice: string;
+  /** Approximate length in seconds (words / 2.5). */
+  seconds: number;
+}
+
+/** The spoken morning briefing across all sections. */
+export interface Briefing {
+  text: string;
+  words: number;
+  itemIds: string[];
+  audio?: AudioRef;
+}
+
+export interface AudioConfig {
+  /** "openai" for the premium voice, "browser" for the phone's own voice. */
+  provider: "openai" | "browser";
+  model: string;
+  voice: string;
+  voices: string[];
+  instructions: string;
+  speed: number;
+  briefing_minutes: number;
+  pregenerate_briefing: boolean;
+  pregenerate_sections: boolean;
+}
+
 export interface SourceReport {
   category: string;
   name: string;
@@ -65,6 +93,7 @@ export interface DayEdition {
   /** New items added today, per category. */
   newByCategory: Record<string, number>;
   recaps: Record<string, Recap>;
+  briefing?: Briefing;
   sources: SourceReport[];
   usage?: { inputTokens: number; outputTokens: number; calls: number };
 }
@@ -130,5 +159,6 @@ export interface SiteConfig {
     audio_recap_long_minutes: number;
     blocked_domains: string[];
   };
+  audio: AudioConfig;
   categories: CategoryConfig[];
 }

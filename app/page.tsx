@@ -8,6 +8,7 @@ import { FeatureTile } from "@/components/FeatureTile";
 import { ItemRow } from "@/components/ItemRow";
 import { EmptyState } from "@/components/EmptyState";
 import { BotWidget } from "@/components/BotWidget";
+import { RecapPlayer } from "@/components/RecapPlayer";
 
 export const dynamic = "force-static";
 
@@ -46,6 +47,22 @@ export default function HomePage() {
               : `Good morning, ${config.reader.name}. Your first edition prints tomorrow at six.`)}
         </p>
       </section>
+
+      {edition?.briefing?.text ? (
+        <div style={{ marginTop: 12, ["--cat-ink" as string]: "#5b4a7a", ["--cat-tint" as string]: "#ede8f4" }}>
+          <RecapPlayer
+            kind="briefing"
+            categoryName="Morning briefing"
+            date={edition.date}
+            short={edition.briefing.text}
+            wordsShort={edition.briefing.words}
+            stories={edition.briefing.itemIds.length}
+            preparedUrl={edition.briefing.audio?.url}
+            provider={config.audio.provider}
+            defaultVoice={edition.briefing.audio?.voice ?? config.audio.voice}
+          />
+        </div>
+      ) : null}
 
       <NavPills categories={config.categories} active="home" />
 
