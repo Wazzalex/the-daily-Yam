@@ -9,6 +9,7 @@ import { ItemRow } from "@/components/ItemRow";
 import { EmptyState } from "@/components/EmptyState";
 import { BotWidget } from "@/components/BotWidget";
 import { RecapPlayer } from "@/components/RecapPlayer";
+import { StaleNotice } from "@/components/StaleNotice";
 
 export const dynamic = "force-static";
 
@@ -37,6 +38,8 @@ export default function HomePage() {
           <strong>{newToday}</strong> new {newToday === 1 ? "story" : "stories"}
         </span>
       </div>
+
+      {edition ? <StaleNotice editionDate={edition.date} /> : null}
 
       <section className="hero reveal" aria-label="Welcome">
         <p className="hero__line">{config.site.tagline}</p>

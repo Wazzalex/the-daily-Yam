@@ -1,15 +1,21 @@
-# The morning robot: runs every day at 06:00 Europe/Paris, reads the sources,
-# asks Claude to summarise and rank them, commits the edition into data/,
-# and Vercel redeploys the site from that commit.
+# The morning robot: produces the day's edition, commits it into data/, and Vercel
+# redeploys the site from that commit.
+#
+# Scheduling note — GitHub does NOT start scheduled workflows on time: it queues them
+# and starts them when it has capacity, often hours late. So instead of asking
+# "is it six o'clock?", every scheduled run asks "has today's edition been published
+# yet?" and does the work if not. Several slots are registered so that the first one
+# to actually start takes care of the day; the later ones find the edition and stop.
 
 name: Morning edition
 
 on:
   schedule:
-    # GitHub cron is UTC. 04:00 UTC = 06:00 Paris in summer, 05:00 UTC = 06:00 Paris in winter.
-    # A guard step below keeps only the run that lands at 06:00 local time.
-    - cron: "0 4 * * *"
-    - cron: "0 5 * * *"
+    # Minutes in UTC. Paris is UTC+1 in winter, UTC+2 in summer.
+    - cron: "30 3 * * *"   # 04:30 / 05:30 Paris
+    - cron: "30 4 * * *"   # 05:30 / 06:30 Paris
+    - cron: "15 5 * * *"   # 06:15 / 07:15 Paris
+    - cron: "0 7 * * *"    # 08:00 / 09:00 Paris — safety net
   workflow_dispatch:
     inputs:
       category:
@@ -18,6 +24,10 @@ on:
         default: ""
       dry_run:
         description: "Dry run: only check that sources answer (no Claude, nothing committed)"
+        type: boolean
+        default: false
+      force:
+        description: "Run even if today's edition already exists (re-run the day)"
         type: boolean
         default: false
 
@@ -33,34 +43,41 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-      - name: Is it six o'clock in Paris?
-        id: gate
-        run: |
-          HOUR=$(TZ=Europe/Paris date +%H)
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$HOUR" = "06" ]; then
-            echo "run=true" >> "$GITHUB_OUTPUT"
-            echo "It is ${HOUR}h in Paris — running the edition."
-          else
-            echo "run=false" >> "$GITHUB_OUTPUT"
-            echo "It is ${HOUR}h in Paris — not this one, skipping."
-          fi
-
       - name: Check out the repository
-        if: steps.gate.outputs.run == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+
+      - name: Has today's edition been published yet?
+        id: gate
+        env:
+          FORCE: ${{ github.event.inputs.force }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          TODAY=$(TZ=Europe/Paris date +%Y-%m-%d)
+          NOW=$(TZ=Europe/Paris date +%H:%M)
+          echo "Paris time: $TODAY $NOW"
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "Manual run — going ahead."
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          elif [ -f "data/days/$TODAY.json" ] && [ "$FORCE" != "true" ]; then
+            echo "Edition of $TODAY already published — nothing to do."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "No edition for $TODAY yet — running the robot."
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Set up Node
         if: steps.gate.outputs.run == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
       - name: Install dependencies
         if: steps.gate.outputs.run == 'true'
-        run: |
-          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+        run: npm ci --no-audit --no-fund
 
       - name: Run the robot
         if: steps.gate.outputs.run == 'true'
@@ -78,15 +95,22 @@ jobs:
       - name: Commit today's edition
         if: steps.gate.outputs.run == 'true' && github.event.inputs.dry_run != 'true'
         run: |
+          TODAY=$(TZ=Europe/Paris date +%Y-%m-%d)
+          if [ ! -f "data/days/$TODAY.json" ]; then
+            echo "::error::The robot finished but produced no edition for $TODAY."
+            exit 1
+          fi
           git config user.name "The Daily Yam robot"
           git config user.email "robot@thedailyyam.local"
           git add data
-          if [ -f package-lock.json ]; then git add package-lock.json; fi
           if git diff --cached --quiet; then
             echo "Nothing new to commit."
           else
-            DATE=$(TZ=Europe/Paris date +%Y-%m-%d)
-            git commit -m "Edition of $DATE"
-            git pull --rebase origin main || true
-            git push origin HEAD:main
+            git commit -m "Edition of $TODAY"
+            # Another commit may have landed meanwhile (a code push): rebase, then push with a few retries.
+            for attempt in 1 2 3; do
+              git pull --rebase origin main && git push origin HEAD:main && break
+              echo "Push attempt $attempt failed, retrying…"
+              sleep 10
+            done
           fi
