@@ -191,24 +191,19 @@ categories:
         url: https://www.museedegrenoble.fr/
         lang: fr
         weight: 1.5
-      - name: Musées de l'Isère — agenda
-        type: page
-        url: https://musees.isere.fr/
-        lang: fr
-        weight: 1.2
-      - name: Le Magasin CNAC
-        type: page
-        url: https://magasin-cnac.org/
-        lang: fr
-        weight: 1
       - name: Le Petit Bulletin Grenoble
         type: page
         url: https://www.petit-bulletin.fr/grenoble/
         lang: fr
         weight: 1
-      - name: Place Gre'net — Culture
-        type: rss
-        url: https://www.placegrenet.fr/category/culture/feed     # à confirmer
+      - name: Magasin CNAC (actualité)
+        type: news
+        query: "Magasin CNAC Grenoble"
+        lang: fr
+        weight: 0.8
+      - name: Musées de l'Isère (actualité)
+        type: news
+        query: "musée Isère exposition"
         lang: fr
         weight: 0.8
       - name: Expositions à Grenoble (actualité)
@@ -226,11 +221,6 @@ categories:
         url: https://www.theguardian.com/artanddesign/rss
         lang: en
         weight: 1.2
-      - name: Apollo Magazine
-        type: rss
-        url: https://www.apollo-magazine.com/feed/
-        lang: en
-        weight: 0.8
       - name: Hyperallergic
         type: rss
         url: https://hyperallergic.com/feed/
@@ -380,11 +370,6 @@ categories:
         url: https://www.alpes-isere.com/decouvrir-l-isere/agenda/evenements/
         lang: fr
         weight: 1.5
-      - name: Isère Culture — agenda
-        type: page
-        url: https://culture.isere.fr/
-        lang: fr
-        weight: 1.2
       - name: Le Grésivaudan — agenda
         type: page
         url: https://www.le-gresivaudan.fr/          # à confirmer
@@ -403,16 +388,6 @@ categories:
       - name: Hexagone — Scène nationale Meylan
         type: page
         url: https://www.theatre-hexagone.eu/
-        lang: fr
-        weight: 0.8
-      - name: Vide-greniers en Isère
-        type: page
-        url: https://vide-greniers.org/38-Isere      # à confirmer
-        lang: fr
-        weight: 1
-      - name: Place Gre'net
-        type: rss
-        url: https://www.placegrenet.fr/feed
         lang: fr
         weight: 0.8
       - name: France 3 Alpes — Isère
@@ -442,7 +417,7 @@ categories:
         weight: 1
       - name: Brocantes et vide-greniers (actualité)
         type: news
-        query: "brocante vide-greniers Grésivaudan"
+        query: "brocante OR vide-greniers Isère Grésivaudan OR Grenoble"
         lang: fr
         weight: 1
       - name: Marchés de producteurs (actualité)
@@ -552,11 +527,6 @@ categories:
         url: https://www.francetvinfo.fr/titres.rss
         lang: fr
         weight: 1
-      - name: France Inter — Le journal de 8h
-        type: podcast
-        search: "Journal de 8h"
-        lang: fr
-        weight: 0.8
       - name: HugoDécrypte — Actus du jour
         type: youtube
         channel_id: UCAcAnMF0OrCtUep3Y4M-ZPw
@@ -624,11 +594,6 @@ categories:
         search: "Music Matters BBC Radio 3"
         lang: en
         weight: 0.8
-      - name: Gramophone
-        type: rss
-        url: https://www.gramophone.co.uk/rss        # à confirmer
-        lang: en
-        weight: 0.7
       - name: Dance Magazine
         type: rss
         url: https://www.dancemagazine.com/feed/

@@ -101,7 +101,16 @@ async function parseFeed(url: string) {
   if (res.status >= 400) throw new Error(`HTTP ${res.status}`);
   const body = res.text.trim();
   if (!body.startsWith("<")) throw new Error("Not an XML feed");
-  return parser.parseString(body);
+  try {
+    return await parser.parseString(body);
+  } catch (err) {
+    // Some feeds ship unescaped ampersands or stray control characters; repair and retry once.
+    const repaired = body
+      .replace(/&(?!(?:[a-zA-Z][a-zA-Z0-9]*|#\d+|#x[0-9a-fA-F]+);)/g, "&amp;")
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
+    if (repaired === body) throw err;
+    return parser.parseString(repaired);
+  }
 }
 
 // ---------------------------------------------------------------- rss

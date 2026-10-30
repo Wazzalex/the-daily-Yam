@@ -1,12 +1,13 @@
 // Removes recap audio older than keep_days from Blob storage (samples are kept).
 
 import { del, list } from "@vercel/blob";
+import { blobToken } from "../../lib/tts";
 
 export async function cleanupOldAudio(keepDays: number, today: string): Promise<number> {
   const cutoff = new Date(today + "T00:00:00Z");
   cutoff.setUTCDate(cutoff.getUTCDate() - keepDays);
   const cutoffKey = cutoff.toISOString().slice(0, 10);
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const token = blobToken();
   const old: string[] = [];
   let cursor: string | undefined;
   do {

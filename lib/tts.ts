@@ -14,12 +14,22 @@ export interface VoiceSettings {
 }
 
 const OPENAI_URL = "https://api.openai.com/v1/audio/speech";
+
+/** Secrets pasted into GitHub or Vercel sometimes carry a stray newline, space or quotes: clean them. */
+function secret(name: string): string | undefined {
+  const v = process.env[name];
+  if (!v) return undefined;
+  const clean = v.trim().replace(/^["']|["']$/g, "");
+  return clean || undefined;
+}
+export const openaiKey = () => secret("OPENAI_API_KEY");
+export const blobToken = () => secret("BLOB_READ_WRITE_TOKEN");
 const MAX_CHARS = 1800; // smaller pieces, more of them in parallel: the speech API runs at ~6× real time per request
 const CONCURRENCY = 6;
 
 export function ttsAvailable(): { ok: boolean; reason?: string } {
-  if (!process.env.OPENAI_API_KEY) return { ok: false, reason: "OPENAI_API_KEY is not set" };
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return { ok: false, reason: "BLOB_READ_WRITE_TOKEN is not set" };
+  if (!openaiKey()) return { ok: false, reason: "OPENAI_API_KEY is not set" };
+  if (!blobToken()) return { ok: false, reason: "BLOB_READ_WRITE_TOKEN is not set" };
   return { ok: true };
 }
 
@@ -81,7 +91,7 @@ export function chunkScript(text: string, max = MAX_CHARS): string[] {
 async function speakChunk(text: string, s: VoiceSettings): Promise<Buffer> {
   const res = await fetch(OPENAI_URL, {
     method: "POST",
-    headers: { authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "content-type": "application/json" },
+    headers: { authorization: `Bearer ${openaiKey()}`, "content-type": "application/json" },
     body: JSON.stringify({
       model: s.model,
       voice: s.voice,
@@ -116,7 +126,7 @@ export async function synthesize(text: string, s: VoiceSettings): Promise<Buffer
 
 /** Returns the public URL of an existing blob at this pathname, if any. */
 export async function findAudio(pathname: string): Promise<string | null> {
-  const r = await list({ prefix: pathname, limit: 1, token: process.env.BLOB_READ_WRITE_TOKEN });
+  const r = await list({ prefix: pathname, limit: 1, token: blobToken() });
   const hit = r.blobs.find((b) => b.pathname === pathname);
   return hit ? hit.url : null;
 }
@@ -135,7 +145,7 @@ export async function ensureAudio(pathname: string, text: string, s: VoiceSettin
     allowOverwrite: true,
     contentType: "audio/mpeg",
     cacheControlMaxAge: 60 * 60 * 24 * 30,
-    token: process.env.BLOB_READ_WRITE_TOKEN,
+    token: blobToken(),
   });
   return { url: blob.url, generated: true };
 }
