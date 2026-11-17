@@ -19,7 +19,10 @@ const OPENAI_URL = "https://api.openai.com/v1/audio/speech";
 function secret(name: string): string | undefined {
   const v = process.env[name];
   if (!v) return undefined;
-  const clean = v.trim().replace(/^["']|["']$/g, "");
+  // Tokens never contain whitespace or quotes; a pasted "NAME=value" prefix is dropped too.
+  const clean = v
+    .replace(new RegExp(`^\\s*${name}\\s*=\\s*`), "")
+    .replace(/[\s"'\u200B-\u200D\uFEFF]/g, "");
   return clean || undefined;
 }
 export const openaiKey = () => secret("OPENAI_API_KEY");

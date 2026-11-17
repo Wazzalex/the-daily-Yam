@@ -244,14 +244,14 @@ Return JSON: {"listen": [{"i": index, "why": "...", "summary": "..."}], "read": 
 }
 
 export async function writeWeeklyGreeting(config: SiteConfig, picks: Array<Item & { categoryName: string }>, weekOf: string): Promise<string> {
-  const system = `You write one warm, short opening line for a weekly cultural selection. British English, no emojis, no exclamation marks, at most two sentences and 40 words. Reply with the sentence only.`;
+  const system = `You write one warm, short opening line for a weekly cultural selection. British English, no emojis, no exclamation marks, no markdown or asterisks, at most two sentences and 40 words. Reply with the sentence only.`;
   const user = `${readerBlock(config)}
 
 Week of ${weekOf}. This week's picks:
 ${picks.map((p) => `- [${p.categoryName}] ${p.title} (${p.type})`).join("\n")}
 
 Write the opening line. Start with "Good morning, Yamuna." and hint at one or two things worth her weekend, without listing them all.`;
-  return (await ask(FAST_MODEL, system, user, 800)).replace(/^["“]|["”]$/g, "").trim();
+  return (await ask(FAST_MODEL, system, user, 800)).replace(/\*+/g, "").replace(/^["“]|["”]$/g, "").trim();
 }
 
 // ---------------------------------------------------------------- Words

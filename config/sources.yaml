@@ -461,11 +461,11 @@ categories:
       sections.
     cross_post_from_all: true
     sources:
-      - name: Positive News
-        type: rss
-        url: https://www.positive.news/feed/
+      - name: Positive News (actualité)
+        type: news
+        query: "site:positive.news"
         lang: en
-        weight: 1.5
+        weight: 1.2
       - name: Reasons to be Cheerful
         type: rss
         url: https://reasonstobecheerful.world/feed/
