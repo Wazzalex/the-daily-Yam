@@ -1,7 +1,8 @@
-// Shared types for the site and the morning robot.
+// Shared types for the site and the robots (daily + weekly).
 
 export type ItemType = "article" | "podcast" | "video" | "event";
 
+/** A candidate collected by the daily robot and kept in the pool for the week. */
 export interface Item {
   /** Stable id: sha1 of the canonical URL (plus title for page-extracted events). */
   id: string;
@@ -11,22 +12,19 @@ export interface Item {
   /** Original title, in its original language. */
   title: string;
   url: string;
-  /** Display name of the source (as in the config, or the outlet for news searches). */
   source: string;
   domain: string;
   lang: string;
   /** ISO date-time of publication. */
   publishedAt: string;
-  /** For events: ISO date (YYYY-MM-DD) of the event, and optional end date. */
   eventDate?: string;
   eventEnd?: string;
   eventPlace?: string;
-  /** English summary written by Claude (2–3 sentences). */
+  /** One or two sentences in English (pool note); refined for the items picked in the Weekly. */
   summary: string;
   /** 0–10, how much this is for Yamuna. */
   relevance: number;
   goodNews?: boolean;
-  /** Human duration for audio/video, e.g. "18 min". */
   duration?: string;
   videoId?: string;
   image?: string;
@@ -34,40 +32,10 @@ export interface Item {
   addedOn: string;
 }
 
-export interface Recap {
-  short: string;
-  long: string;
-  itemIds: string[];
-  wordsShort: number;
-  wordsLong: number;
-}
-
 export interface AudioRef {
   url: string;
   voice: string;
-  /** Approximate length in seconds (words / 2.5). */
   seconds: number;
-}
-
-/** The spoken morning briefing across all sections. */
-export interface Briefing {
-  text: string;
-  words: number;
-  itemIds: string[];
-  audio?: AudioRef;
-}
-
-export interface AudioConfig {
-  /** "openai" for the premium voice, "browser" for the phone's own voice. */
-  provider: "openai" | "browser";
-  model: string;
-  voice: string;
-  voices: string[];
-  instructions: string;
-  speed: number;
-  briefing_minutes: number;
-  pregenerate_briefing: boolean;
-  pregenerate_sections: boolean;
 }
 
 export interface SourceReport {
@@ -82,21 +50,114 @@ export interface SourceReport {
   ms: number;
 }
 
-export interface DayEdition {
-  /** YYYY-MM-DD (Europe/Paris). */
+export interface Usage {
+  inputTokens: number;
+  outputTokens: number;
+  calls: number;
+}
+
+/** The Daily Yam: one short spoken piece a day. */
+export interface DailyEdition {
   date: string;
   generatedAt: string;
-  /** One or two warm sentences for the hero. */
-  greeting: string;
-  /** Item ids for the home page mix, in order. */
-  mix: string[];
-  /** New items added today, per category. */
-  newByCategory: Record<string, number>;
-  recaps: Record<string, Recap>;
-  briefing?: Briefing;
+  /** Spoken script, ~600 words. */
+  script: string;
+  words: number;
+  /** One-line teaser shown under the player. */
+  teaser: string;
+  /** Items the script drew on, in order of appearance. */
+  itemIds: string[];
+  audio?: AudioRef;
+  newCandidates: number;
   sources: SourceReport[];
-  usage?: { inputTokens: number; outputTokens: number; calls: number };
+  usage?: Usage;
 }
+
+export interface WeeklyPick {
+  itemId: string;
+  /** "listen" for podcasts and videos, "read" for articles. */
+  mode: "listen" | "read";
+  /** Why this one, in one warm sentence. */
+  why: string;
+}
+
+export interface WeeklyEdition {
+  /** Saturday's date, YYYY-MM-DD. */
+  date: string;
+  /** Monday of that week, for display. */
+  weekOf: string;
+  generatedAt: string;
+  greeting: string;
+  picks: Record<string, WeeklyPick[]>;
+  bookOfTheWeek?: { slug: string; why: string };
+  wordsSession?: string; // date key of data/words/<date>.json
+  usage?: Usage;
+}
+
+// ---------------------------------------------------------------- Words
+
+export interface WordEntry {
+  /** The word or expression as written by Yamuna. */
+  term: string;
+  lang: "en" | "fr";
+  /** Her own meaning/note, if she wrote one. */
+  note?: string;
+  /** Short definition in the term's language (or English for French terms). */
+  definition: string;
+  /** Example sentence written by Claude, ideally echoing the week's stories. */
+  example: string;
+  /** IPA or plain pronunciation hint. */
+  pronunciation?: string;
+  /** Whether this is a new word or a review. */
+  review: boolean;
+  audio?: { term?: string; example?: string };
+}
+
+export interface WordsSession {
+  date: string;
+  generatedAt: string;
+  entries: WordEntry[];
+  /** One MP3 of the whole drill (term, pause, example…). */
+  drill?: AudioRef;
+  docEntries: number;
+  newEntries: number;
+}
+
+export interface WordsRegistry {
+  /** term (normalised) → first seen, last reviewed. */
+  [key: string]: { term: string; firstSeen: string; lastReviewed?: string; times: number };
+}
+
+// ---------------------------------------------------------------- Bookshelf
+
+export interface BookConfig {
+  title: string;
+  author: string;
+  note?: string;
+  year?: number | string;
+}
+
+export interface Book extends BookConfig {
+  slug: string;
+}
+
+export interface BookRefresher {
+  slug: string;
+  generatedAt: string;
+  /** Written refresher, in sections. */
+  inANutshell: string;
+  story: string;
+  people: string;
+  themes: string;
+  whyItMatters: string;
+  questions: string[];
+  /** Spoken version, ~650 words. */
+  script: string;
+  confidence: "high" | "medium" | "low";
+  audio?: AudioRef;
+}
+
+// ---------------------------------------------------------------- Config
 
 export interface CategoryColor {
   ink: string;
@@ -125,40 +186,56 @@ export interface CategoryConfig {
   color: CategoryColor;
   brief: string;
   sources: SourceConfig[];
-  works?: Record<string, string[]>;
+  /** false = collected but no tab (feeds the Daily only). */
+  show?: boolean;
   geo?: { center: string; radius_km: number; places: string[] };
   platforms?: string[];
   cross_post_from_all?: boolean;
 }
 
+export interface AudioConfig {
+  provider: "openai" | "browser";
+  model: string;
+  voice: string;
+  voices: string[];
+  instructions: string;
+  instructions_fr: string;
+  speed: number;
+}
+
+export interface EditionsConfig {
+  daily: { minutes: number; sections: string[]; good_news_signoff: boolean; max_stories: number };
+  weekly: {
+    weekday: string;
+    per_section: { listen: number; read: number };
+    lookback_days: number;
+    book_of_the_week: boolean;
+    words_per_week: number;
+  };
+}
+
+export interface WordsConfig {
+  google_doc_id?: string;
+  marker: string;
+  per_week: number;
+  review_after_weeks: number;
+}
+
 export interface SiteConfig {
-  site: {
-    name: string;
-    tagline: string;
-    motto: string;
-    timezone: string;
-    refresh_hour: number;
-    language: string;
-  };
-  reader: {
-    name: string;
-    profile: string;
-    loves: string[];
-    avoids: string[];
-  };
+  site: { name: string; tagline: string; motto: string; timezone: string; refresh_hour: number; language: string };
+  reader: { name: string; profile: string; loves: string[]; avoids: string[] };
+  editions: EditionsConfig;
   rules: {
     window_hours: number;
-    /** Longer window for podcasts and videos, which are published weekly. */
     window_hours_media: number;
     keep_days: number;
-    max_per_category_per_day: number;
-    home_mix_size: number;
+    keep_weeks: number;
+    max_candidates_per_day: number;
     summary_language: string;
     prefer_english_sources: boolean;
-    audio_recap_minutes: number;
-    audio_recap_long_minutes: number;
     blocked_domains: string[];
   };
   audio: AudioConfig;
+  words: WordsConfig;
   categories: CategoryConfig[];
 }

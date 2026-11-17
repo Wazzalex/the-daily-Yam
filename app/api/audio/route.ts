@@ -1,32 +1,24 @@
-import fs from "node:fs";
-import path from "node:path";
 import { loadConfig } from "@/lib/config";
-import { loadLatestEdition } from "@/lib/data";
-import type { DayEdition } from "@/lib/types";
-import { SAMPLE_TEXT, briefingAudioPath, ensureAudio, findAudio, sampleAudioPath, sectionAudioPath, settingsFor, ttsAvailable } from "@/lib/tts";
+import { loadDaily, loadLatestDaily, loadRefresher, loadWordsSessions } from "@/lib/data";
+import { SAMPLE_TEXT, bookAudioPath, dailyAudioPath, drillScript, ensureAudio, findAudio, sampleAudioPath, settingsFor, ttsAvailable, wordAudioPath } from "@/lib/tts";
 
-// Premium voice, on demand: /api/audio?kind=section&category=literature&version=short&date=2026-10-23&voice=marin
-// Returns a 302 to the MP3 in Blob storage (generated on first request, then cached), so an <audio>
-// element can use this URL as its src straight from a tap. ?json=1 returns {url} instead.
+// Premium voice, on demand. Returns a 302 to the MP3 in Blob storage (generated on first request).
+//   ?kind=daily&date=YYYY-MM-DD          the Daily Yam
+//   ?kind=word&date=…&i=3&part=term      one vocabulary clip (term | example)
+//   ?kind=drill&date=…                   the whole Words drill
+//   ?kind=book&slug=…                    a book refresher
+//   ?kind=sample&voice=…                 the voice sample
+// &voice=… overrides the voice; &json=1 returns {url} instead of redirecting.
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // Hobby plan allows up to 300 s with Fluid compute; a 12-minute recap needs ~40 s
+export const maxDuration = 300;
 
-const DAILY_GENERATION_LIMIT = Number(process.env.YAM_AUDIO_DAILY_LIMIT ?? 60);
+const DAILY_GENERATION_LIMIT = Number(process.env.YAM_AUDIO_DAILY_LIMIT ?? 120);
 let generated = { day: "", count: 0 };
-
-function loadEdition(date: string | null): DayEdition | null {
-  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    const f = path.join(process.cwd(), "data", "days", `${date}.json`);
-    if (fs.existsSync(f)) return JSON.parse(fs.readFileSync(f, "utf8")) as DayEdition;
-    return null;
-  }
-  return loadLatestEdition();
-}
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const kind = url.searchParams.get("kind") ?? "section";
+  const kind = url.searchParams.get("kind") ?? "daily";
   const wantJson = url.searchParams.get("json") === "1";
   const config = loadConfig();
 
@@ -34,32 +26,46 @@ export async function GET(req: Request) {
   const avail = ttsAvailable();
   if (!avail.ok) return new Response(`Voice service not configured (${avail.reason}).`, { status: 503 });
 
-  const voice = settingsFor(config.audio, url.searchParams.get("voice") ?? undefined);
+  const voiceParam = url.searchParams.get("voice") ?? undefined;
+  let lang: "en" | "fr" = "en";
   let text = "";
   let pathname = "";
 
   if (kind === "sample") {
     text = SAMPLE_TEXT;
-    pathname = sampleAudioPath(text, voice);
-  } else {
-    const edition = loadEdition(url.searchParams.get("date"));
-    if (!edition) return new Response("No edition for that date.", { status: 404 });
-    if (kind === "briefing") {
-      if (!edition.briefing?.text) return new Response("No briefing in this edition.", { status: 404 });
-      text = edition.briefing.text;
-      pathname = briefingAudioPath(edition.date, text, voice);
+    pathname = sampleAudioPath(text, settingsFor(config.audio, voiceParam));
+  } else if (kind === "daily") {
+    const date = url.searchParams.get("date");
+    const ed = date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? loadDaily(date) : loadLatestDaily();
+    if (!ed?.script) return new Response("No Daily for that date.", { status: 404 });
+    text = ed.script;
+    pathname = dailyAudioPath(ed.date, text, settingsFor(config.audio, voiceParam));
+  } else if (kind === "word" || kind === "drill") {
+    const date = url.searchParams.get("date") ?? "";
+    const session = loadWordsSessions(12).find((s) => s.date === date);
+    if (!session) return new Response("No Words session for that date.", { status: 404 });
+    if (kind === "drill") {
+      text = drillScript(session.entries);
+      pathname = wordAudioPath(date, "drill", 0, text, settingsFor(config.audio, voiceParam));
     } else {
-      const category = url.searchParams.get("category") ?? "";
-      const version = url.searchParams.get("version") === "long" ? "long" : "short";
-      const recap = edition.recaps?.[category];
-      if (!recap) return new Response("No recap for that section.", { status: 404 });
-      text = version === "long" ? recap.long : recap.short;
-      if (!text) return new Response("Empty recap.", { status: 404 });
-      pathname = sectionAudioPath(edition.date, category, version, text, voice);
+      const i = Number(url.searchParams.get("i") ?? -1);
+      const part = url.searchParams.get("part") === "example" ? "example" : "term";
+      const e = session.entries[i];
+      if (!e) return new Response("No such entry.", { status: 404 });
+      lang = e.lang;
+      text = part === "example" ? e.example : e.term;
+      if (!text) return new Response("Empty entry.", { status: 404 });
+      pathname = wordAudioPath(date, part, i, text, settingsFor(config.audio, voiceParam, lang));
     }
-  }
+  } else if (kind === "book") {
+    const slug = url.searchParams.get("slug") ?? "";
+    const ref = loadRefresher(slug);
+    if (!ref?.script) return new Response("No refresher on file for that book yet — open its page first.", { status: 404 });
+    text = ref.script;
+    pathname = bookAudioPath(slug, text, settingsFor(config.audio, voiceParam));
+  } else return new Response("Unknown kind.", { status: 400 });
 
-  // Generation budget (per instance, per day) — cached files are always served.
+  const voice = settingsFor(config.audio, voiceParam, lang);
   const day = new Date().toISOString().slice(0, 10);
   if (generated.day !== day) generated = { day, count: 0 };
 
@@ -70,7 +76,7 @@ export async function GET(req: Request) {
       generated.count += 1;
       target = (await ensureAudio(pathname, text, voice)).url;
     }
-    if (wantJson) return Response.json({ url: target, voice: voice.voice }, { headers: { "cache-control": "no-store", "x-yam-audio": "2" } });
+    if (wantJson) return Response.json({ url: target, voice: voice.voice }, { headers: { "cache-control": "no-store", "x-yam-audio": "3" } });
     return new Response(null, { status: 302, headers: { location: target, "cache-control": "no-store" } });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown error";

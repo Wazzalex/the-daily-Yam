@@ -1,132 +1,117 @@
 import Link from "next/link";
-import { loadConfig } from "@/lib/config";
-import { itemsById, loadItems, loadLatestEdition } from "@/lib/data";
-import { longDate, parisDateKey } from "@/lib/format";
-import type { Item } from "@/lib/types";
+import { loadBooks, loadConfig, visibleCategories } from "@/lib/config";
+import { loadLatestDaily, loadLatestWeekly, loadLatestWords, loadWeeklyItems } from "@/lib/data";
+import { longDate, shortDate } from "@/lib/format";
+import { AudioPlayer } from "@/components/AudioPlayer";
 import { NavPills } from "@/components/NavPills";
-import { FeatureTile } from "@/components/FeatureTile";
-import { ItemRow } from "@/components/ItemRow";
+import { PickRow } from "@/components/PickRow";
 import { EmptyState } from "@/components/EmptyState";
 import { BotWidget } from "@/components/BotWidget";
-import { RecapPlayer } from "@/components/RecapPlayer";
 import { StaleNotice } from "@/components/StaleNotice";
 
 export const dynamic = "force-static";
 
 export default function HomePage() {
   const config = loadConfig();
-  const items = loadItems();
-  const edition = loadLatestEdition();
-  const byId = itemsById(items);
-  const now = edition ? new Date(edition.generatedAt) : new Date();
-  const today = parisDateKey(now);
+  const daily = loadLatestDaily();
+  const weekly = loadLatestWeekly();
+  const words = loadLatestWords();
+  const items = loadWeeklyItems(weekly);
+  const cats = visibleCategories();
   const catById = new Map(config.categories.map((c) => [c.id, c]));
-
-  let mix: Item[] = (edition?.mix ?? []).map((id) => byId.get(id)).filter((i): i is Item => Boolean(i));
-  if (!mix.length && items.length) {
-    // No edition file yet (or an empty one): show the freshest, most relevant stories instead.
-    mix = [...items].sort((a, b) => b.relevance - a.relevance || b.publishedAt.localeCompare(a.publishedAt)).slice(0, config.rules.home_mix_size);
-  }
-  const newToday = items.filter((i) => i.addedOn === today).length;
-  const [lead, ...rest] = mix;
+  const books = loadBooks();
+  const book = weekly?.bookOfTheWeek ? books.find((b) => b.slug === weekly.bookOfTheWeek!.slug) : undefined;
+  const dailyDate = daily ? new Date(daily.date + "T06:00:00") : new Date();
+  const onScreen: string[] = [];
+  for (const picks of Object.values(weekly?.picks ?? {})) for (const p of picks) onScreen.push(p.itemId);
 
   return (
     <div className="wrap">
       <div className="dateline">
-        <span>{longDate(now)}</span>
-        <span>
-          <strong>{newToday}</strong> new {newToday === 1 ? "story" : "stories"}
-        </span>
+        <span>{longDate(daily?.generatedAt ?? new Date())}</span>
+        <span>{weekly ? `Week of ${shortDate(weekly.weekOf)}` : ""}</span>
       </div>
 
-      {edition ? <StaleNotice editionDate={edition.date} /> : null}
+      {daily ? <StaleNotice editionDate={daily.date} /> : null}
 
       <section className="hero reveal" aria-label="Welcome">
         <p className="hero__line">{config.site.tagline}</p>
-        <p className="hero__greeting">
-          {edition?.greeting ||
-            (edition
-              ? `Good morning, ${config.reader.name}. Your ${new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: "Europe/Paris" }).format(now)} edition is ready.`
-              : `Good morning, ${config.reader.name}. Your first edition prints tomorrow at six.`)}
-        </p>
+        <p className="hero__greeting">{daily?.teaser ? `Today in four minutes: ${daily.teaser}` : `Good morning, ${config.reader.name}. Your first Daily prints tomorrow at six.`}</p>
       </section>
 
-      {edition?.briefing?.text ? (
-        <div style={{ marginTop: 12, ["--cat-ink" as string]: "#5b4a7a", ["--cat-tint" as string]: "#ede8f4" }}>
-          <RecapPlayer
-            kind="briefing"
-            categoryName="Morning briefing"
-            date={edition.date}
-            short={edition.briefing.text}
-            wordsShort={edition.briefing.words}
-            stories={edition.briefing.itemIds.length}
-            preparedUrl={edition.briefing.audio?.url}
+      {daily ? (
+        <div style={{ marginTop: 12 }}>
+          <AudioPlayer
+            title="Listen to today's Yam"
+            mediaTitle={`The Daily Yam — ${longDate(dailyDate)}`}
+            subtitle={`${Math.max(1, Math.round(daily.words / 150))} min · ${daily.itemIds.length} ${daily.itemIds.length === 1 ? "story" : "stories"}`}
+            text={daily.script}
+            preparedUrl={daily.audio?.url}
+            preparedVoice={daily.audio?.voice}
+            onDemandUrl={`/api/audio?kind=daily&date=${daily.date}`}
             provider={config.audio.provider}
-            defaultVoice={edition.briefing.audio?.voice ?? config.audio.voice}
+            defaultVoice={config.audio.voice}
+            transcript
           />
         </div>
       ) : null}
 
-      <NavPills categories={config.categories} active="home" />
+      <NavPills categories={cats} active="home" />
 
-      <div className="sec-head">
-        <h2>Today's mix</h2>
-        <span className="sec-head__meta">Picked for you at {String(config.site.refresh_hour).padStart(2, "0")}:00</span>
+      <div className="week-head">
+        <h1>This week's Yam</h1>
+        <p>{weekly?.greeting ?? "The first weekly selection arrives on Saturday morning: a few things to listen to, a few to read, per section."}</p>
       </div>
 
-      {!lead ? (
-        <EmptyState
-          title="The presses are warming up"
-          text="Nothing has been printed yet. The robot reads every source at six each morning and the first edition will appear here right after."
-        />
+      {!weekly ? (
+        <EmptyState title="Nothing printed yet" text="The weekly robot runs every Saturday at six." />
       ) : (
-        <>
-          <FeatureTile item={lead} color={catById.get(lead.category)?.color ?? { ink: "#5b4a7a", tint: "#ede8f4" }} categoryName={catById.get(lead.category)?.name ?? lead.category} now={now} />
-          <div className="rows">
-            {rest.map((item, i) => {
-              const cat = catById.get(item.category);
-              return (
-                <ItemRow
-                  key={item.id}
-                  item={item}
-                  color={cat?.color ?? { ink: "#5b4a7a", tint: "#ede8f4" }}
-                  categoryName={cat?.name}
-                  showCategory
-                  index={i + 1}
-                  now={now}
-                />
-              );
-            })}
-          </div>
-        </>
+        cats.map((cat) => {
+          const picks = (weekly.picks[cat.id] ?? []).filter((p) => items.has(p.itemId));
+          if (!picks.length) return null;
+          const listen = picks.filter((p) => p.mode === "listen");
+          const read = picks.filter((p) => p.mode === "read");
+          return (
+            <section key={cat.id} className="section-block" style={{ ["--cat-ink" as string]: cat.color.ink, ["--cat-tint" as string]: cat.color.tint }}>
+              <div className="section-block__head">
+                <h2>{cat.name}</h2>
+                <Link href={`/${cat.id}`}>Previous weeks →</Link>
+              </div>
+              <div className="rows">
+                {[...listen, ...read].map((p, i) => (
+                  <PickRow key={p.itemId} item={items.get(p.itemId)!} pick={p} color={cat.color} index={i} />
+                ))}
+              </div>
+            </section>
+          );
+        })
       )}
 
-      <div className="sec-head">
-        <h2>Sections</h2>
-        <span className="sec-head__meta">{items.length} stories on file</span>
-      </div>
+      {(words && words.entries.length) || book ? (
+        <div className="sec-head">
+          <h2>Also this week</h2>
+        </div>
+      ) : null}
       <div className="sections">
-        {config.categories.map((c, i) => {
-          const inCat = items.filter((it) => it.category === c.id);
-          const fresh = inCat.filter((it) => it.addedOn === today).length;
-          return (
-            <Link
-              key={c.id}
-              href={`/${c.id}`}
-              className="section-card reveal"
-              style={{ ["--cat-ink" as string]: c.color.ink, ["--cat-tint" as string]: c.color.tint, ["--i" as string]: i }}
-            >
-              <span className="section-card__name">{c.name}</span>
-              <span className="section-card__count">
-                {fresh ? `${fresh} new today · ` : ""}
-                {inCat.length} {inCat.length === 1 ? "story" : "stories"}
-              </span>
-            </Link>
-          );
-        })}
+        {words && words.entries.length ? (
+          <Link href="/words" className="section-card reveal" style={{ ["--cat-ink" as string]: "#8C5E00", ["--cat-tint" as string]: "#FBF0D2" }}>
+            <span className="section-card__name">Words</span>
+            <span className="section-card__count">
+              {words.entries.length} to practise · {words.newEntries} new
+            </span>
+          </Link>
+        ) : null}
+        {book ? (
+          <Link href={`/bookshelf/${book.slug}`} className="section-card reveal" style={{ ["--cat-ink" as string]: "#A0463A", ["--cat-tint" as string]: "#F9E7E2" }}>
+            <span className="section-card__name">Book of the week</span>
+            <span className="section-card__count">
+              {book.title} — {book.author}
+            </span>
+          </Link>
+        ) : null}
       </div>
 
-      <BotWidget itemIds={mix.map((i) => i.id)} />
+      <BotWidget itemIds={onScreen.slice(0, 30)} />
     </div>
   );
 }

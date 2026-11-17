@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { loadConfig } from "@/lib/config";
+import { loadConfig, visibleCategories } from "@/lib/config";
 import { NavPills } from "@/components/NavPills";
 import { SearchClient } from "@/components/SearchClient";
 
@@ -12,7 +12,7 @@ export default function SearchPage() {
   const colors = Object.fromEntries(config.categories.map((c) => [c.id, c.color]));
   return (
     <div className="wrap">
-      <NavPills categories={config.categories} active="search" />
+      <NavPills categories={visibleCategories()} active="search" />
       <Suspense fallback={null}>
         <SearchClient colors={colors} />
       </Suspense>

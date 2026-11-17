@@ -14,17 +14,17 @@ interface Props {
   categoryName?: string;
   /** Ids of the items currently on screen, so the Yam knows what "this" means. */
   itemIds: string[];
+  /** On a Bookshelf page: the book's slug. */
+  bookSlug?: string;
 }
 
 const SUGGESTIONS: Record<string, string[]> = {
-  default: ["What's the one thing to read this morning?", "Sum up today in three lines", "Anything new about Twelfth Night?"],
-  literature: ["Which of these would you read first, and why?", "Any new poetry worth my time?", "What's the Booker news?"],
-  art: ["What's on near Grenoble this weekend?", "Tell me more about the first exhibition", "Any show linking painting and literature?"],
-  bfi: ["Anything useful for my seconde class?", "News about The Handmaid's Tale?", "Explain the latest BFI change simply"],
-  around: ["What's happening near Les Adrets this weekend?", "Any markets or brocantes coming up?", "Concerts in Grenoble soon?"],
-  good: ["Give me the best good news in one line", "Anything uplifting about schools or books?", "Why is this good news?"],
-  france: ["What happened in France yesterday, simply?", "Anything about schools or teachers?", "Is there a strike or transport issue today?"],
+  default: ["Which of this week's picks would you start with?", "Sum up today's Yam in three lines", "Anything new from Open Book?"],
+  literature: ["Which of these would you listen to first, and why?", "Any new poetry worth my time?", "What's the Booker news?"],
+  art: ["Tell me more about the first exhibition", "Any show linking painting and literature?", "What's on in London this month?"],
   watch: ["Any good new thriller series?", "A dance documentary for tonight?", "What's new on Arte this week?"],
+  world: ["What's the one story worth my time this week?", "Explain that simply, in a few lines", "Anything about schools or teachers?"],
+  book: ["Remind me how it ends", "Which character should I think about again?", "Which of my other books is closest to this one?"],
 };
 
 /** Turns bare URLs and **bold** into links/strong; everything else stays text. */
@@ -49,7 +49,7 @@ function renderInline(text: string) {
   });
 }
 
-export function BotWidget({ category, categoryName, itemIds }: Props) {
+export function BotWidget({ category, categoryName, itemIds, bookSlug }: Props) {
   const [open, setOpen] = useState(false);
   const [log, setLog] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -76,7 +76,7 @@ export function BotWidget({ category, categoryName, itemIds }: Props) {
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ question: q, category, itemIds: itemIds.slice(0, 30), history }),
+        body: JSON.stringify({ question: q, category, itemIds: itemIds.slice(0, 30), bookSlug, history }),
       });
       if (!res.ok || !res.body) {
         const errText = await res.text().catch(() => "");
@@ -108,7 +108,7 @@ export function BotWidget({ category, categoryName, itemIds }: Props) {
     }
   }
 
-  const suggestions = SUGGESTIONS[category ?? "default"] ?? SUGGESTIONS.default;
+  const suggestions = SUGGESTIONS[bookSlug ? "book" : (category ?? "default")] ?? SUGGESTIONS.default;
 
   return (
     <>
@@ -117,7 +117,7 @@ export function BotWidget({ category, categoryName, itemIds }: Props) {
           <header className="bot-panel__head">
             <div className="bot-panel__title">
               <strong>Ask the Yam</strong>
-              <span>{categoryName ? `About ${categoryName} and anything else` : "About today's stories and anything else"}</span>
+              <span>{categoryName ? `About ${categoryName} and anything else` : "About this week's picks and anything else"}</span>
             </div>
             <button type="button" className="icon-btn icon-btn--ghost" aria-label="Close" onClick={() => setOpen(false)}>
               <IconClose />

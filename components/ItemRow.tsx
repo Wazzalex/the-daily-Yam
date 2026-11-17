@@ -1,27 +1,21 @@
 import type { CategoryColor, Item } from "@/lib/types";
-import { typeLabel, whenLabel } from "@/lib/format";
+import { shortDate, typeLabel } from "@/lib/format";
 import { TypeIcon } from "./Icons";
-import { VideoEmbed } from "./VideoEmbed";
 
 interface Props {
   item: Item;
   color: CategoryColor;
   categoryName?: string;
-  /** Show the category name in the meta line (home, search). */
   showCategory?: boolean;
-  /** Hide the summary (dense lists). */
-  compact?: boolean;
-  /** Embed YouTube videos inline. */
-  embedVideo?: boolean;
   index?: number;
-  now?: Date;
 }
 
-export function ItemRow({ item, color, categoryName, showCategory, compact, embedVideo = true, index = 0, now }: Props) {
+/** A compact row used by search results and "more from the pool". */
+export function ItemRow({ item, color, categoryName, showCategory, index = 0 }: Props) {
   const vars = { ["--cat-ink" as string]: color.ink, ["--cat-tint" as string]: color.tint, ["--i" as string]: index };
-  const when = whenLabel(item, now);
+  const when = item.eventDate ? shortDate(item.eventDate) : shortDate(item.publishedAt);
   return (
-    <article className={`row reveal${compact ? " row--compact" : ""}`} style={vars}>
+    <article className="row row--compact reveal" style={vars}>
       <a className="badge" href={item.url} target="_blank" rel="noopener noreferrer" aria-label={`${typeLabel(item.type)}: open at ${item.source}`}>
         <TypeIcon type={item.type} />
       </a>
@@ -43,12 +37,6 @@ export function ItemRow({ item, color, categoryName, showCategory, compact, embe
           <span>{item.source}</span>
           <span aria-hidden="true">·</span>
           <span>{when}</span>
-          {item.eventPlace ? (
-            <>
-              <span aria-hidden="true">·</span>
-              <span>{item.eventPlace}</span>
-            </>
-          ) : null}
           {item.duration ? (
             <>
               <span aria-hidden="true">·</span>
@@ -57,8 +45,7 @@ export function ItemRow({ item, color, categoryName, showCategory, compact, embe
           ) : null}
           {item.lang === "fr" ? <span className="flag">FR</span> : null}
         </div>
-        {!compact && item.summary ? <p className="row__summary">{item.summary}</p> : null}
-        {embedVideo && item.videoId ? <VideoEmbed videoId={item.videoId} title={item.title} image={item.image} /> : null}
+        {item.summary ? <p className="row__summary">{item.summary}</p> : null}
       </div>
     </article>
   );

@@ -1,12 +1,16 @@
 import { loadConfig } from "@/lib/config";
-import { loadItems } from "@/lib/data";
+import { loadPool, loadWeeklies, loadWeeklyItems } from "@/lib/data";
+import type { Item } from "@/lib/types";
 
-// Built once per deployment: a compact index of everything on the site for client-side search.
+// Built once per deployment: everything searchable — the pool (last fortnight) and every weekly pick on file.
 export const dynamic = "force-static";
 
 export function GET() {
   const names = new Map(loadConfig().categories.map((c) => [c.id, c.name]));
-  const index = loadItems().map((i) => ({
+  const all = new Map<string, Item>();
+  for (const i of loadPool()) all.set(i.id, i);
+  for (const w of loadWeeklies(8)) for (const [id, it] of loadWeeklyItems(w)) if (!all.has(id)) all.set(id, it);
+  const index = [...all.values()].map((i) => ({
     id: i.id,
     category: i.category,
     categoryName: names.get(i.category) ?? i.category,

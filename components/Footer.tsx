@@ -7,8 +7,8 @@ export function Footer({ siteName, motto, generatedAt }: { siteName: string; mot
       <span className="footer__motto">{motto}</span>
       <span className="footer__note">
         {generatedAt
-          ? `This edition was printed on ${longDate(generatedAt)}. Next one tomorrow at six.`
-          : "Printed daily at six, for a readership of one."}
+          ? `Today's Yam was printed on ${longDate(generatedAt)}. The next one tomorrow at six; the weekly on Saturday.`
+          : "A four-minute Daily, a Weekly on Saturdays, for a readership of one."}
       </span>
     </footer>
   );

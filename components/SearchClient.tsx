@@ -85,13 +85,13 @@ export function SearchClient({ colors }: { colors: Record<string, CategoryColor>
       </div>
 
       {q.trim().length < 2 ? (
-        <p style={{ color: "var(--ink-2)", fontSize: 15 }}>Type an author, a place, a title, a theme — anything that has appeared in the paper in the last two weeks.</p>
+        <p style={{ color: "var(--ink-2)", fontSize: 15 }}>Type an author, a title, a programme, a theme — anything the Yam has noticed in the last fortnight, or picked in recent weeks.</p>
       ) : results.length === 0 && index ? (
         <EmptyState title="Nothing matches yet" text="Try a shorter word, a surname, or ask the Yam in the corner — it can look beyond the paper." />
       ) : (
         <div className="rows">
           {results.map((item, i) => (
-            <ItemRow key={item.id} item={item} color={colors[item.category] ?? fallback} categoryName={item.categoryName} showCategory index={i % 12} embedVideo={false} />
+            <ItemRow key={item.id} item={item} color={colors[item.category] ?? fallback} categoryName={item.categoryName} showCategory index={i % 12} />
           ))}
         </div>
       )}

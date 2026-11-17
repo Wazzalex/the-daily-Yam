@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/ask": ["./config/**/*", "./data/**/*"],
     "/api/audio": ["./config/**/*", "./data/**/*"],
+    "/api/book": ["./config/**/*", "./data/**/*"],
   },
   async headers() {
     return [

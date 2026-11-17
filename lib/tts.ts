@@ -33,9 +33,10 @@ export function ttsAvailable(): { ok: boolean; reason?: string } {
   return { ok: true };
 }
 
-export function settingsFor(config: AudioConfig, voice?: string): VoiceSettings {
+export function settingsFor(config: AudioConfig, voice?: string, lang: "en" | "fr" = "en"): VoiceSettings {
   const v = voice && config.voices.includes(voice) ? voice : config.voice;
-  return { model: config.model, voice: v, instructions: config.instructions, speed: config.speed };
+  const instructions = lang === "fr" ? config.instructions_fr || config.instructions : config.instructions;
+  return { model: config.model, voice: v, instructions, speed: config.speed };
 }
 
 /** Short fingerprint of the script and the voice settings: same text + same voice = same file. */
@@ -43,12 +44,16 @@ export function audioHash(text: string, s: VoiceSettings): string {
   return createHash("sha1").update([s.model, s.voice, s.speed, s.instructions, text].join("\u0000")).digest("hex").slice(0, 10);
 }
 
-export function sectionAudioPath(date: string, category: string, version: "short" | "long", text: string, s: VoiceSettings): string {
-  return `audio/${date}/${category}-${version}-${s.voice}-${audioHash(text, s)}.mp3`;
+export function dailyAudioPath(date: string, text: string, s: VoiceSettings): string {
+  return `audio/${date}/daily-${s.voice}-${audioHash(text, s)}.mp3`;
 }
 
-export function briefingAudioPath(date: string, text: string, s: VoiceSettings): string {
-  return `audio/${date}/briefing-${s.voice}-${audioHash(text, s)}.mp3`;
+export function wordAudioPath(date: string, kind: "term" | "example" | "drill", index: number, text: string, s: VoiceSettings): string {
+  return `audio/words/${date}/${kind}-${String(index).padStart(2, "0")}-${s.voice}-${audioHash(text, s)}.mp3`;
+}
+
+export function bookAudioPath(slug: string, text: string, s: VoiceSettings): string {
+  return `audio/books/${slug}-${s.voice}-${audioHash(text, s)}.mp3`;
 }
 
 export function sampleAudioPath(text: string, s: VoiceSettings): string {
@@ -152,7 +157,13 @@ export async function ensureAudio(pathname: string, text: string, s: VoiceSettin
 
 /** The paragraph read by every voice on the sample page. */
 export const SAMPLE_TEXT =
-  "Good morning, Yamuna. It's a bright Friday in the Grésivaudan, and here is your morning briefing. " +
+  "Good morning, Yamuna. It's a bright Saturday in the Grésivaudan, and here is your Daily Yam. " +
   "The Guardian is rather taken with a new novel set in a lighthouse off the Cornish coast — six hundred pages, apparently worth every one. " +
-  "Closer to home, the Musée de Grenoble opens its winter hang on the fifth of November, with free entry on the first Sunday. " +
-  "And for your première class: a new production of Twelfth Night opens in Stratford in the spring. That's all for now — enjoy the coffee.";
+  "On Radio 4, Open Book spends half an hour with Kazuo Ishiguro on the art of the unreliable narrator. " +
+  "And one good thing before you go: a village library in Devon has reopened, run entirely by its readers. That's all for now — enjoy the coffee.";
+
+/** Builds a Words drill script: term, a pause for repeating, the example, a pause. */
+export function drillScript(entries: Array<{ term: string; example: string }>): string {
+  const pause = " ... ... ";
+  return entries.map((e, i) => `${i + 1}. ${e.term}.${pause}${e.term}.${pause}${e.example}${pause}`).join(" ");
+}

@@ -1,62 +1,79 @@
 #!/usr/bin/env tsx
-// The morning robot. Runs at 6:00 Europe/Paris from GitHub Actions:
-//   1. reads every source in config/sources.yaml
-//   2. filters (blocklist, freshness, duplicates)
-//   3. asks Claude to summarise and score each item for Yamuna
-//   4. picks the day's items per section and the home-page mix
-//   5. writes the spoken recaps and the greeting
-//   6. saves everything under data/ (committed by the workflow)
+// The robots.
 //
-// Flags: --dry-run (fetch only, no Claude, nothing written)
-//        --category=<id> (one section only)   --no-recaps   --max-items=<n>
+// DAILY (every morning): read every source → filter, de-duplicate → Claude judges the
+// candidates and writes a one-line note → they join the week's POOL → Claude writes the
+// Daily Yam, a 4-minute spoken piece → audio is pre-generated when the voice is set up.
+//
+// WEEKLY (Saturdays, or --weekly): from the pool of the week, per section, Claude picks
+// 2 things to listen to and 2 to read → the Words session from Yamuna's Google Doc →
+// a book of the week from the shelf.
+//
+// Flags: --dry-run    fetch only, no Claude, nothing written
+//        --weekly     run the weekly part today (even if not Saturday)
+//        --no-daily   skip the daily part (use with --weekly)
+//        --category=<id>   one section only (daily collection)
+//        --force      redo today's daily / this week's weekly even if present
 
-import { loadConfig } from "../lib/config";
+import { loadBooks, loadConfig } from "../lib/config";
 import { parisDateKey } from "../lib/format";
-import type { Briefing, CategoryConfig, DayEdition, Item, Recap, SourceConfig, SourceReport } from "../lib/types";
-import { enrichItems, extractItemsFromPage, usage, writeBriefing, writeGreeting, writeRecap } from "./lib/claude";
-import { briefingAudioPath, ensureAudio, estimateSeconds, sectionAudioPath, settingsFor, ttsAvailable } from "../lib/tts";
+import type { CategoryConfig, DailyEdition, Item, SourceConfig, SourceReport, WeeklyEdition, WeeklyPick, WordEntry, WordsSession } from "../lib/types";
+import { bookAudioPath, dailyAudioPath, drillScript, ensureAudio, estimateSeconds, settingsFor, ttsAvailable, wordAudioPath } from "../lib/tts";
 import { cleanupOldAudio } from "./lib/audio-cleanup";
-import {
-  fetchNews,
-  fetchPage,
-  fetchPodcast,
-  fetchRss,
-  fetchYoutube,
-  type RawItem,
-  type ResolvedCache,
-} from "./lib/fetchers";
+import { buildWordEntries, judgeItems, extractItemsFromPage, pickBookOfTheWeek, pickWeekly, usage, writeDaily, writeRefresher, writeWeeklyGreeting } from "./lib/claude";
+import { fetchNews, fetchPage, fetchPodcast, fetchRss, fetchYoutube, type RawItem, type ResolvedCache } from "./lib/fetchers";
 import { mapLimit } from "./lib/http";
-import { pruneOld, readCache, readItems, writeCache, writeEdition, writeItems } from "./lib/store";
+import {
+  latestWeeklyDate,
+  prune,
+  readCache,
+  readDaily,
+  readPool,
+  readRefresher,
+  readWeekly,
+  readWordsRegistry,
+  recentBookSlugs,
+  writeCache,
+  writeDaily as saveDaily,
+  writePool,
+  writeRefresher as saveRefresher,
+  writeWeekly as saveWeekly,
+  writeWordsRegistry,
+  writeWordsSession,
+} from "./lib/store";
 import { normalizeUrl, sha1 } from "./lib/text";
+import { fetchWordsDocument, normaliseTerm, parseWordsDocument } from "./lib/words-doc";
 
 const args = new Set(process.argv.slice(2));
 const flag = (name: string) => [...args].find((a) => a.startsWith(`--${name}=`))?.split("=")[1];
 const DRY = args.has("--dry-run");
+const FORCE = args.has("--force");
 const ONLY = flag("category");
-const NO_RECAPS = args.has("--no-recaps");
-const MAX_ITEMS = Number(flag("max-items") ?? 0) || undefined;
+const WANT_WEEKLY = args.has("--weekly");
+const NO_DAILY = args.has("--no-daily");
 
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
-// ---------------------------------------------------------------- helpers
-
-function expandSources(cat: CategoryConfig): SourceConfig[] {
-  const list = [...cat.sources];
-  // Works on the programme become news searches automatically.
-  if (cat.works) {
-    for (const [group, works] of Object.entries(cat.works)) {
-      for (const w of works) {
-        list.push({ name: `${w} (${group.replace(/_/g, " ")})`, type: "news", query: w, lang: "en", weight: 0.9 });
-      }
-    }
-  }
-  return list;
+function parisWeekday(d: Date): string {
+  return new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: "Europe/Paris" }).format(d).toLowerCase();
 }
+function mondayOf(dateKey: string): string {
+  const d = new Date(dateKey + "T12:00:00Z");
+  const dow = (d.getUTCDay() + 6) % 7; // monday = 0
+  d.setUTCDate(d.getUTCDate() - dow);
+  return d.toISOString().slice(0, 10);
+}
+function daysAgo(dateKey: string, n: number): string {
+  const d = new Date(dateKey + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+
+// ---------------------------------------------------------------- collection helpers
 
 function isBlocked(domain: string, sourceName: string, blocked: string[]): boolean {
   const d = domain.toLowerCase();
   if (blocked.some((b) => d === b || d.endsWith("." + b))) return true;
-  // Belt and braces: an outlet whose name matches a blocked domain's stem (e.g. "CNEWS" ↔ cnews.fr).
   const name = sourceName.toLowerCase().replace(/[^a-z0-9]/g, "");
   return blocked.some((b) => {
     const stem = b.split(".")[0].replace(/[^a-z0-9]/g, "");
@@ -77,12 +94,10 @@ function isFresh(raw: RawItem, now: Date, windowHours: number, mediaWindowHours:
   }
   if (!raw.publishedAt) return false;
   const age = now.getTime() - new Date(raw.publishedAt).getTime();
-  // Podcasts and videos come out weekly: give them a longer window (they are only ever added once).
   const hours = raw.type === "podcast" || raw.type === "video" ? mediaWindowHours : windowHours;
   return age >= -3600000 && age <= hours * 3600000;
 }
 
-/** Normalised title used to spot the same story coming from several sources. */
 function titleKey(title: string): string {
   return title
     .toLowerCase()
@@ -92,33 +107,27 @@ function titleKey(title: string): string {
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 }
-
 function isNearDuplicate(key: string, seen: string[]): boolean {
   if (key.length < 12) return seen.includes(key);
   return seen.some((s) => s === key || (s.length >= 12 && (s.includes(key) || key.includes(s))));
 }
 
-// ---------------------------------------------------------------- main
+// ---------------------------------------------------------------- DAILY
 
-async function main() {
+async function runDaily(now: Date, today: string): Promise<{ newItems: Item[]; reports: SourceReport[] }> {
   const config = loadConfig();
-  const now = new Date();
-  const today = parisDateKey(now);
   const cache: ResolvedCache = readCache();
-  const existing = readItems();
-  const known = new Set(existing.map((i) => i.id));
-  const knownUrls = new Set(existing.map((i) => normalizeUrl(i.url)));
+  const pool = readPool();
+  const known = new Set(pool.map((i) => i.id));
+  const knownUrls = new Set(pool.map((i) => normalizeUrl(i.url)));
   const byCatExisting = new Map<string, Item[]>();
-  for (const i of existing) byCatExisting.set(i.category, [...(byCatExisting.get(i.category) ?? []), i]);
+  for (const i of pool) byCatExisting.set(i.category, [...(byCatExisting.get(i.category) ?? []), i]);
   const reports: SourceReport[] = [];
   const newItems: Item[] = [];
-  const newByCategory: Record<string, number> = {};
   const categories = config.categories.filter((c) => !ONLY || c.id === ONLY);
 
-  log(`The Daily Yam — edition ${today}${DRY ? " (dry run)" : ""}; ${existing.length} items already on file`);
-
   for (const cat of categories) {
-    const sources = expandSources(cat);
+    const sources: SourceConfig[] = cat.sources;
     log(`▸ ${cat.name}: ${sources.length} sources`);
     const catRaw: Array<RawItem & { weight: number; alwaysInclude: boolean }> = [];
 
@@ -153,9 +162,7 @@ async function main() {
       reports.push(report);
     });
 
-    // De-duplicate inside the section: same URL, same story already on file, or a near-identical title
-    // (the same festival announced by three agendas). Favourites are checked first so they win ties.
-    catRaw.sort((a, b) => (b.weight - a.weight) || (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""));
+    catRaw.sort((a, b) => b.weight - a.weight || (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""));
     const seenIds = new Set<string>();
     const seenTitles: string[] = (byCatExisting.get(cat.id) ?? []).map((i) => titleKey(i.title));
     const fresh = catRaw.filter((r) => {
@@ -167,19 +174,18 @@ async function main() {
       seenTitles.push(tkey);
       return true;
     });
-    const toJudge = fresh.slice(0, MAX_ITEMS ?? 60);
+    const toJudge = fresh.slice(0, config.rules.max_candidates_per_day);
     log(`  ${catRaw.length} fresh, ${fresh.length} new, judging ${toJudge.length}`);
-    if (DRY || !toJudge.length) {
-      newByCategory[cat.id] = 0;
-      continue;
-    }
+    if (DRY || !toJudge.length) continue;
 
-    const batches: typeof toJudge[] = [];
-    for (let i = 0; i < toJudge.length; i += 12) batches.push(toJudge.slice(i, i + 12));
-    const enriched = (await mapLimit(batches, 3, (b) => enrichItems(config, cat, b, today))).flat();
+    const batches: (typeof toJudge)[] = [];
+    for (let i = 0; i < toJudge.length; i += 13) batches.push(toJudge.slice(i, i + 13));
+    const judged = (await mapLimit(batches, 3, (b) => judgeItems(config, cat, b, today))).flat();
 
-    const candidates = toJudge.map((r, i) => {
-      const e = enriched[i];
+    let kept = 0;
+    toJudge.forEach((r, i) => {
+      const j = judged[i];
+      if (!(r.alwaysInclude || (j.keep && j.relevance >= 5))) return;
       const item: Item = {
         id: itemId(r),
         category: cat.id,
@@ -193,192 +199,318 @@ async function main() {
         eventDate: r.eventDate,
         eventEnd: r.eventEnd,
         eventPlace: r.eventPlace,
-        summary: e.summary || r.description || "",
-        relevance: e.relevance,
-        goodNews: e.goodNews || undefined,
+        summary: j.summary || r.description || "",
+        relevance: Math.round(j.relevance * r.weight * 10) / 10,
+        goodNews: j.goodNews || undefined,
         duration: r.duration,
         videoId: r.videoId,
         image: r.image,
         addedOn: today,
       };
-      return { item, score: e.relevance * r.weight, alwaysInclude: r.alwaysInclude, keep: e.keep };
-    });
-
-    const selected = candidates
-      .filter((c) => c.alwaysInclude || (c.keep && c.item.relevance >= 4))
-      .sort((a, b) => b.score - a.score || b.item.publishedAt.localeCompare(a.item.publishedAt))
-      .slice(0, config.rules.max_per_category_per_day)
-      .map((c) => c.item);
-
-    for (const item of selected) {
       newItems.push(item);
       known.add(item.id);
       knownUrls.add(normalizeUrl(item.url));
-    }
-    newByCategory[cat.id] = selected.length;
-    log(`  kept ${selected.length} for ${cat.name}`);
+      kept += 1;
+    });
+    log(`  pooled ${kept} for ${cat.name}`);
   }
 
-  // Good news from anywhere (cross-posting).
-  const goodCat = config.categories.find((c) => c.cross_post_from_all);
-  const crossPosted = new Set<string>();
-  if (goodCat && !DRY) {
-    const extras = newItems
-      .filter((i) => i.goodNews && i.category !== goodCat.id && i.relevance >= 6)
-      .sort((a, b) => b.relevance - a.relevance)
-      .slice(0, 4)
-      .map((i) => ({ ...i, id: sha1(i.id + "|" + goodCat.id), category: goodCat.id }));
-    for (const e of extras) crossPosted.add(e.id);
-    newItems.push(...extras);
-    if (extras.length) {
-      newByCategory[goodCat.id] = (newByCategory[goodCat.id] ?? 0) + extras.length;
-      log(`  cross-posted ${extras.length} uplifting items into ${goodCat.name}`);
-    }
-  }
-
-  // Report
   const failed = reports.filter((r) => !r.ok);
   log(`Sources: ${reports.length - failed.length} ok, ${failed.length} failed`);
   for (const r of failed) log(`  ✗ ${r.category}/${r.name} [${r.type}]: ${r.error}`);
   if (DRY) {
-    const ok = reports.filter((r) => r.ok).sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
-    for (const r of ok) log(`  ✓ ${r.category}/${r.name} [${r.type}] fetched ${r.fetched}, fresh ${r.kept}`);
-    return;
+    for (const r of reports.filter((x) => x.ok).sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name))) {
+      log(`  ✓ ${r.category}/${r.name} [${r.type}] fetched ${r.fetched}, fresh ${r.kept}${r.note ? " · " + r.note : ""}`);
+    }
+    return { newItems: [], reports };
   }
 
-  // Merge, prune, mix, recaps.
-  let all = pruneOld([...existing, ...newItems], config.rules.keep_days, today);
-  const byCat = new Map<string, Item[]>();
-  for (const i of all) byCat.set(i.category, [...(byCat.get(i.category) ?? []), i]);
+  writeCache(cache);
+  return { newItems, reports };
+}
 
-  const todays = newItems.filter((i) => !crossPosted.has(i.id));
-  const mix: Item[] = [];
-  const used = new Set<string>();
-  for (const cat of config.categories) {
-    const best = todays.filter((i) => i.category === cat.id).sort((a, b) => b.relevance - a.relevance)[0];
-    if (best && !used.has(best.id)) {
-      mix.push(best);
-      used.add(best.id);
-    }
-  }
-  for (const i of [...todays].sort((a, b) => b.relevance - a.relevance)) {
-    if (mix.length >= config.rules.home_mix_size) break;
-    if (!used.has(i.id)) {
-      mix.push(i);
-      used.add(i.id);
-    }
-  }
-  mix.sort((a, b) => b.relevance - a.relevance);
+async function writeDailyEdition(now: Date, today: string, pool: Item[], newItems: Item[], reports: SourceReport[]): Promise<DailyEdition> {
+  const config = loadConfig();
+  const names = new Map(config.categories.map((c) => [c.id, c.name]));
+  const sections = new Set(config.editions.daily.sections);
+  const since = daysAgo(today, 2);
+  // Candidates: new today first, then the freshest of the last two days, best relevance first.
+  const recent = pool
+    .filter((i) => sections.has(i.category) && (i.addedOn >= since || newItems.some((n) => n.id === i.id)))
+    .sort((a, b) => (b.addedOn === today ? 1 : 0) - (a.addedOn === today ? 1 : 0) || b.relevance - a.relevance);
+  // A spread across sections so the Daily is not all books.
+  const perSection = new Map<string, Item[]>();
+  for (const i of recent) perSection.set(i.category, [...(perSection.get(i.category) ?? []), i]);
+  const candidates: Item[] = [];
+  for (let round = 0; round < 4; round++) for (const [, list] of perSection) if (list[round]) candidates.push(list[round]);
+  const good = config.editions.daily.good_news_signoff
+    ? pool.filter((i) => i.goodNews && i.addedOn >= since).sort((a, b) => b.relevance - a.relevance)[0]
+    : undefined;
 
-  const recaps: Record<string, Recap> = {};
-  if (!NO_RECAPS) {
-    const windowStart = new Date(now.getTime() - config.rules.window_hours * 3600000).toISOString();
-    await mapLimit(categories, 2, async (cat) => {
-      const recent = (byCat.get(cat.id) ?? [])
-        .filter((i) => i.publishedAt >= windowStart || i.addedOn === today)
-        .sort((a, b) => b.relevance - a.relevance)
-        .slice(0, 15);
-      if (!recent.length) {
-        const empty = `Good morning, Yamuna. Nothing new has come in for ${cat.name} over the last two days — a quiet patch. Everything already on the page is still there whenever you want it.`;
-        recaps[cat.id] = { short: empty, long: empty, itemIds: [], wordsShort: 0, wordsLong: 0 };
-        return;
-      }
-      try {
-        const short = await writeRecap(config, cat, recent, config.rules.audio_recap_minutes, today);
-        const long =
-          recent.length >= 5
-            ? await writeRecap(config, cat, recent, config.rules.audio_recap_long_minutes, today)
-            : short;
-        recaps[cat.id] = { short: short.text, long: long.text, itemIds: recent.map((i) => i.id), wordsShort: short.words, wordsLong: long.words };
-        log(`  recap ${cat.name}: ${short.words} / ${long.words} words`);
-      } catch (err) {
-        log(`  recap ${cat.name} failed: ${(err as Error).message}`);
-      }
-    });
+  const weekday = new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: "Europe/Paris" }).format(now);
+  let script = "";
+  let teaser = "";
+  let words = 0;
+  let usedIds: string[] = [];
+  if (candidates.length) {
+    const r = await writeDaily(
+      config,
+      candidates.slice(0, 14).map((i) => ({ ...i, categoryName: names.get(i.category) ?? i.category })),
+      good,
+      config.editions.daily.minutes,
+      config.editions.daily.max_stories,
+      today,
+      weekday,
+    );
+    script = r.script;
+    teaser = r.teaser;
+    words = r.words;
+    usedIds = r.usedIds;
+    log(`  daily script: ${words} words, ${usedIds.length} stories`);
+  } else {
+    script = `Good morning, Yamuna. A quiet ${weekday}: nothing new worth your four minutes came in overnight, so take them for yourself. Back tomorrow.`;
+    teaser = "A quiet morning.";
+    words = script.split(/\s+/).length;
   }
 
-  // The morning briefing: one spoken piece across every section, from today's mix plus each section's best.
-  let briefing: Briefing | undefined;
-  if (!NO_RECAPS && mix.length) {
-    const names = new Map(config.categories.map((c) => [c.id, c.name]));
-    const picked = new Map<string, Item>();
-    for (const i of mix) picked.set(i.id, i);
-    for (const cat of config.categories) {
-      for (const i of todays.filter((x) => x.category === cat.id).sort((a, b) => b.relevance - a.relevance).slice(0, 2)) picked.set(i.id, i);
-    }
-    const material = [...picked.values()].slice(0, 18).map((i) => ({ ...i, categoryName: names.get(i.category) ?? i.category }));
-    try {
-      const b = await writeBriefing(config, material, config.audio.briefing_minutes, today);
-      briefing = { text: b.text, words: b.words, itemIds: material.map((i) => i.id) };
-      log(`  briefing: ${b.words} words`);
-    } catch (err) {
-      log(`briefing failed: ${(err as Error).message}`);
-    }
-  }
-
-  // Premium voice: pre-generate what the config asks for, so it is instant at seven.
-  const tts = ttsAvailable();
-  if (config.audio.provider === "openai" && !tts.ok) log(`audio: skipped (${tts.reason})`);
-  if (config.audio.provider === "openai" && tts.ok) {
-    const voice = settingsFor(config.audio);
-    if (briefing && config.audio.pregenerate_briefing) {
-      try {
-        const r = await ensureAudio(briefingAudioPath(today, briefing.text, voice), briefing.text, voice);
-        briefing.audio = { url: r.url, voice: voice.voice, seconds: estimateSeconds(briefing.text) };
-        log(`  audio: briefing ${r.generated ? "generated" : "already there"}`);
-      } catch (err) {
-        log(`  audio: briefing failed: ${(err as Error).message}`);
-      }
-    }
-    if (config.audio.pregenerate_sections) {
-      await mapLimit(Object.entries(recaps), 2, async ([catId, recap]) => {
-        if (!recap.itemIds.length) return;
-        try {
-          await ensureAudio(sectionAudioPath(today, catId, "short", recap.short, voice), recap.short, voice);
-          log(`  audio: ${catId} short ready`);
-        } catch (err) {
-          log(`  audio: ${catId} failed: ${(err as Error).message}`);
-        }
-      });
-    }
-    try {
-      const removed = await cleanupOldAudio(config.rules.keep_days, today);
-      if (removed) log(`  audio: removed ${removed} old file(s)`);
-    } catch (err) {
-      log(`  audio: cleanup failed: ${(err as Error).message}`);
-    }
-  }
-
-  let greeting = `Good morning, Yamuna. Your ${new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: "Europe/Paris" }).format(now)} edition is ready.`;
-  if (mix.length) {
-    try {
-      const g = await writeGreeting(config, mix, today);
-      if (g) greeting = g;
-      else log("greeting came back empty; keeping the default line");
-    } catch (err) {
-      log(`greeting failed: ${(err as Error).message}`);
-    }
-  }
-
-  const edition: DayEdition = {
+  const edition: DailyEdition = {
     date: today,
     generatedAt: now.toISOString(),
-    greeting,
-    mix: mix.map((i) => i.id),
-    newByCategory,
-    recaps,
-    briefing,
+    script,
+    words,
+    teaser,
+    itemIds: usedIds,
+    newCandidates: newItems.length,
     sources: reports.sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name)),
-    usage: { ...usage },
   };
 
-  // If the robot already ran today (manual re-run), merge instead of duplicating.
-  all = Array.from(new Map(all.map((i) => [i.id, i])).values());
-  writeItems(all);
-  writeEdition(edition);
-  writeCache(cache);
+  const tts = ttsAvailable();
+  if (config.audio.provider === "openai" && tts.ok) {
+    const voice = settingsFor(config.audio);
+    try {
+      const r = await ensureAudio(dailyAudioPath(today, script, voice), script, voice);
+      edition.audio = { url: r.url, voice: voice.voice, seconds: estimateSeconds(script) };
+      log(`  audio: daily ${r.generated ? "generated" : "already there"}`);
+    } catch (err) {
+      log(`  audio: daily failed (${(err as Error).message.slice(0, 120)}) — the site will make it on first play`);
+    }
+  } else if (config.audio.provider === "openai") log(`  audio: skipped (${tts.reason}) — the site will make it on first play`);
+  return edition;
+}
 
-  log(`Done: ${newItems.length} new items, ${all.length} on site, mix of ${mix.length}. Claude: ${usage.calls} calls, ${usage.inputTokens} in / ${usage.outputTokens} out tokens.`);
+// ---------------------------------------------------------------- WEEKLY
+
+async function runWeekly(now: Date, today: string, pool: Item[]): Promise<void> {
+  const config = loadConfig();
+  const names = new Map(config.categories.map((c) => [c.id, c.name]));
+  const since = daysAgo(today, config.editions.weekly.lookback_days);
+  const weekOf = mondayOf(today);
+  const picks: Record<string, WeeklyPick[]> = {};
+  const pickedItems: Item[] = [];
+
+  for (const cat of config.categories.filter((c) => c.show !== false)) {
+    const week = pool.filter((i) => i.category === cat.id && i.addedOn >= since).sort((a, b) => b.relevance - a.relevance);
+    const listenable = week.filter((i) => i.type === "podcast" || i.type === "video").slice(0, 18);
+    const readable = week.filter((i) => i.type === "article" || i.type === "event").slice(0, 18);
+    if (!listenable.length && !readable.length) {
+      picks[cat.id] = [];
+      log(`  ${cat.name}: nothing this week`);
+      continue;
+    }
+    try {
+      const r = await pickWeekly(config, cat, listenable, readable, config.editions.weekly.per_section.listen, config.editions.weekly.per_section.read, today);
+      picks[cat.id] = r.picks;
+      for (const p of r.picks) {
+        const it = pool.find((i) => i.id === p.itemId);
+        if (!it) continue;
+        if (r.summaries[it.id]) it.summary = r.summaries[it.id];
+        pickedItems.push(it);
+      }
+      log(`  ${cat.name}: ${r.picks.filter((p) => p.mode === "listen").length} to listen, ${r.picks.filter((p) => p.mode === "read").length} to read`);
+    } catch (err) {
+      log(`  ${cat.name}: weekly pick failed: ${(err as Error).message}`);
+      picks[cat.id] = [];
+    }
+  }
+
+  const weekTitles = pickedItems.map((i) => i.title);
+  let greeting = `Good morning, Yamuna. Your week's Yam is ready: a few things to listen to, a few to read, nothing more.`;
+  if (pickedItems.length) {
+    try {
+      greeting = await writeWeeklyGreeting(config, pickedItems.map((i) => ({ ...i, categoryName: names.get(i.category) ?? i.category })), weekOf);
+    } catch (err) {
+      log(`  greeting failed: ${(err as Error).message}`);
+    }
+  }
+
+  // Words
+  let wordsSession: string | undefined;
+  try {
+    const session = await buildWordsSession(today, weekTitles);
+    if (session) wordsSession = session.date;
+  } catch (err) {
+    log(`  words: ${(err as Error).message}`);
+  }
+
+  // Book of the week
+  let bookOfTheWeek: WeeklyEdition["bookOfTheWeek"];
+  const books = loadBooks();
+  if (config.editions.weekly.book_of_the_week && books.length) {
+    try {
+      bookOfTheWeek = await pickBookOfTheWeek(config, books, recentBookSlugs(), weekTitles);
+      if (bookOfTheWeek) {
+        log(`  book of the week: ${bookOfTheWeek.slug}`);
+        const book = books.find((b) => b.slug === bookOfTheWeek!.slug)!;
+        if (!readRefresher(book.slug)) {
+          const r = await writeRefresher(config, book);
+          saveRefresher({ slug: book.slug, generatedAt: now.toISOString(), ...r });
+          log(`  refresher written for ${book.title} (${r.confidence})`);
+        }
+      }
+    } catch (err) {
+      log(`  book of the week failed: ${(err as Error).message}`);
+    }
+  }
+
+  const edition: WeeklyEdition = { date: today, weekOf, generatedAt: now.toISOString(), greeting, picks, bookOfTheWeek, wordsSession, usage: { ...usage } };
+  saveWeekly(edition, pickedItems);
+
+  // Audio for the book of the week, when the voice is set up.
+  const tts = ttsAvailable();
+  if (bookOfTheWeek && config.audio.provider === "openai" && tts.ok) {
+    const ref = readRefresher(bookOfTheWeek.slug);
+    if (ref && !ref.audio && ref.script) {
+      try {
+        const voice = settingsFor(config.audio);
+        const r = await ensureAudio(bookAudioPath(ref.slug, ref.script, voice), ref.script, voice);
+        saveRefresher({ ...ref, audio: { url: r.url, voice: voice.voice, seconds: estimateSeconds(ref.script) } });
+        log(`  audio: book refresher ready`);
+      } catch (err) {
+        log(`  audio: book failed: ${(err as Error).message.slice(0, 120)}`);
+      }
+    }
+  }
+  log(`Weekly ${today}: ${pickedItems.length} picks across ${Object.keys(picks).length} sections`);
+}
+
+async function buildWordsSession(today: string, weekTitles: string[]): Promise<WordsSession | null> {
+  const config = loadConfig();
+  if (!config.words.google_doc_id) {
+    log("  words: no google_doc_id in config");
+    return null;
+  }
+  const text = await fetchWordsDocument(config.words.google_doc_id);
+  const all = parseWordsDocument(text, config.words.marker);
+  if (!all.length) {
+    log("  words: the document has no entries yet");
+    return null;
+  }
+  const registry = readWordsRegistry();
+  const reviewCut = daysAgo(today, config.words.review_after_weeks * 7);
+  const fresh = all.filter((w) => !registry[normaliseTerm(w.term)]);
+  const due = all.filter((w) => {
+    const r = registry[normaliseTerm(w.term)];
+    return r && (!r.lastReviewed || r.lastReviewed <= reviewCut);
+  });
+  // Up to per_week: new words first (newest additions last in the doc → take from the end), then reviews, oldest review first.
+  const perWeek = config.editions.weekly.words_per_week || config.words.per_week;
+  const chosenNew = fresh.slice(-perWeek);
+  const slots = perWeek - chosenNew.length;
+  due.sort((a, b) => (registry[normaliseTerm(a.term)].lastReviewed ?? "").localeCompare(registry[normaliseTerm(b.term)].lastReviewed ?? ""));
+  const chosen = [...chosenNew.map((w) => ({ ...w, review: false })), ...due.slice(0, Math.max(0, slots)).map((w) => ({ ...w, review: true }))];
+  if (!chosen.length) {
+    log("  words: nothing new and nothing due for review");
+    return null;
+  }
+  const entries: WordEntry[] = await buildWordEntries(config, chosen, weekTitles);
+  const session: WordsSession = { date: today, generatedAt: new Date().toISOString(), entries, docEntries: all.length, newEntries: chosenNew.length };
+
+  for (const w of chosen) {
+    const key = normaliseTerm(w.term);
+    const prev = registry[key];
+    registry[key] = { term: w.term, firstSeen: prev?.firstSeen ?? today, lastReviewed: today, times: (prev?.times ?? 0) + 1 };
+  }
+  writeWordsRegistry(registry);
+
+  // Audio: one clip per term and per example (tiny), plus the full drill — when the voice is set up.
+  const tts = ttsAvailable();
+  if (config.audio.provider === "openai" && tts.ok) {
+    await mapLimit(entries.map((e, i) => ({ e, i })), 4, async ({ e, i }) => {
+      try {
+        const vTerm = settingsFor(config.audio, undefined, e.lang);
+        const t = await ensureAudio(wordAudioPath(today, "term", i, e.term, vTerm), e.term, vTerm);
+        const x = e.example ? await ensureAudio(wordAudioPath(today, "example", i, e.example, vTerm), e.example, vTerm) : null;
+        e.audio = { term: t.url, example: x?.url };
+      } catch (err) {
+        log(`  words audio #${i} failed: ${(err as Error).message.slice(0, 100)}`);
+      }
+    });
+    try {
+      const voice = settingsFor(config.audio);
+      const drill = drillScript(entries);
+      const d = await ensureAudio(wordAudioPath(today, "drill", 0, drill, voice), drill, voice);
+      session.drill = { url: d.url, voice: voice.voice, seconds: estimateSeconds(drill) + entries.length * 4 };
+    } catch (err) {
+      log(`  words drill audio failed: ${(err as Error).message.slice(0, 100)}`);
+    }
+  }
+  writeWordsSession(session);
+  log(`  words: ${entries.length} entries (${chosenNew.length} new, ${entries.length - chosenNew.length} review) from ${all.length} in the document`);
+  return session;
+}
+
+// ---------------------------------------------------------------- main
+
+async function main() {
+  const config = loadConfig();
+  const now = new Date();
+  const today = parisDateKey(now);
+  const weekday = parisWeekday(now);
+  log(`The Daily Yam — ${weekday} ${today}${DRY ? " (dry run)" : ""}`);
+
+  let pool = readPool();
+  let didSomething = false;
+
+  if (!NO_DAILY) {
+    if (readDaily(today) && !FORCE && !DRY) {
+      log(`Daily ${today} already exists (use --force to redo).`);
+    } else {
+      const { newItems, reports } = await runDaily(now, today);
+      if (!DRY) {
+        pool = prune([...pool, ...newItems], config.rules.keep_days, config.rules.keep_weeks, today);
+        const edition = await writeDailyEdition(now, today, pool, newItems, reports);
+        edition.usage = { ...usage };
+        writePool(pool);
+        saveDaily(edition);
+        didSomething = true;
+        log(`Daily ${today}: ${newItems.length} new candidates, pool ${pool.length}`);
+      }
+    }
+  }
+
+  const isWeeklyDay = weekday === (config.editions.weekly.weekday || "saturday").toLowerCase();
+  if (!DRY && (WANT_WEEKLY || isWeeklyDay)) {
+    const weekKey = mondayOf(today);
+    const latest = latestWeeklyDate();
+    const alreadyThisWeek = Boolean(readWeekly(today)) || (latest !== null && mondayOf(latest) === weekKey);
+    if (alreadyThisWeek && !FORCE) log(`Weekly for the week of ${weekKey} already exists (use --force to redo).`);
+    else {
+      await runWeekly(now, today, pool);
+      writePool(pool); // summaries refined for the picks
+      didSomething = true;
+    }
+  }
+
+  if (!DRY && config.audio.provider === "openai" && ttsAvailable().ok) {
+    try {
+      const removed = await cleanupOldAudio(config.rules.keep_days, today);
+      if (removed) log(`audio: removed ${removed} old file(s)`);
+    } catch (err) {
+      log(`audio cleanup failed: ${(err as Error).message.slice(0, 100)}`);
+    }
+  }
+
+  log(`Done${didSomething ? "" : " (nothing to do)"}. Claude: ${usage.calls} calls, ${usage.inputTokens} in / ${usage.outputTokens} out tokens.`);
 }
 
 main().catch((err) => {

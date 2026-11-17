@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { loadConfig } from "@/lib/config";
-import { loadLatestEdition } from "@/lib/data";
+import { loadLatestDaily } from "@/lib/data";
 import { Masthead } from "@/components/Masthead";
 import { Footer } from "@/components/Footer";
 
@@ -37,7 +37,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const { site } = loadConfig();
-  const edition = loadLatestEdition();
+  const edition = loadLatestDaily();
   return (
     <html lang="en-GB">
       <head>

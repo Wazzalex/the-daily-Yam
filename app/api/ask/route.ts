@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { loadConfig } from "@/lib/config";
-import { itemsById, loadItems, loadLatestEdition } from "@/lib/data";
+import { getBook, loadBooks, loadConfig } from "@/lib/config";
+import { loadLatestDaily, loadLatestWeekly, loadPool, loadRefresher, loadWeeklyItems, poolById } from "@/lib/data";
 import { longDate } from "@/lib/format";
 import type { Item } from "@/lib/types";
 
@@ -34,6 +34,7 @@ interface Body {
   question?: string;
   category?: string;
   itemIds?: string[];
+  bookSlug?: string;
   history?: Array<{ role: "user" | "assistant"; content: string }>;
 }
 
@@ -60,23 +61,38 @@ export async function POST(req: Request) {
 
   const config = loadConfig();
   const names = new Map(config.categories.map((c) => [c.id, c.name]));
-  const all = loadItems();
-  const byId = itemsById(all);
-  const edition = loadLatestEdition();
+  const all = loadPool();
+  const weekly = loadLatestWeekly();
+  const weeklyItems = loadWeeklyItems(weekly);
+  const byId = poolById(all);
+  for (const [id, it] of weeklyItems) if (!byId.has(id)) byId.set(id, it);
+  const daily = loadLatestDaily();
   const category = config.categories.find((c) => c.id === body.category);
+  const book = body.bookSlug ? getBook(body.bookSlug) : undefined;
+  const refresher = book ? loadRefresher(book.slug) : null;
+  const shelf = loadBooks();
 
   const onScreen = (body.itemIds ?? []).slice(0, 30).map((id) => byId.get(id)).filter((i): i is Item => Boolean(i));
   const onScreenIds = new Set(onScreen.map((i) => i.id));
   const pool = (category ? all.filter((i) => i.category === category.id) : all)
     .filter((i) => !onScreenIds.has(i.id))
-    .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt))
+    .sort((a, b) => b.relevance - a.relevance || b.publishedAt.localeCompare(a.publishedAt))
     .slice(0, category ? 25 : 30);
+  const dailyBlock = daily ? `TODAY'S DAILY YAM (${daily.date}), the four-minute piece she may have just heard:
+"""${daily.script.slice(0, 4000)}"""` : "";
+  const bookBlock = book
+    ? `SHE IS ON THE BOOKSHELF PAGE FOR "${book.title}" by ${book.author}.${refresher ? ` The refresher on file says:\nIn a nutshell: ${refresher.inANutshell}\nStory: ${refresher.story}\nPeople: ${refresher.people}\nThemes: ${refresher.themes}` : ""}`
+    : "";
+  const shelfBlock = shelf.length ? `HER BOOKSHELF (books she has read): ${shelf.map((b) => `${b.title} (${b.author})`).join("; ")}` : "";
 
-  const system = `You are "the Yam", the friendly voice of The Daily Yam, a private morning paper written for one reader, ${config.reader.name}. British English, warm, precise, no emojis. Keep answers short (under 150 words) unless she asks for detail; use short paragraphs, not headings.
+  const system = `You are "the Yam", the friendly voice of The Daily Yam, a private cultural digest written for one reader, ${config.reader.name}. British English, warm, precise, no emojis. Keep answers short (under 150 words) unless she asks for detail; use short paragraphs, not headings.
 
 About her: ${config.reader.profile.trim()}
 
-Today is ${longDate(edition?.generatedAt ?? new Date())}.${category ? ` She is reading the "${category.name}" section: ${category.brief.trim()}` : " She is on the front page."}
+Today is ${longDate(new Date())}.${category ? ` She is reading the "${category.name}" section: ${category.brief.trim()}` : book ? "" : " She is on the front page (this week's picks)."}
+${bookBlock}
+${shelfBlock}
+${dailyBlock}
 
 How to answer:
 1. Use the stories below first — they are what she is looking at. When you refer to one, name it and give its link on its own line.
@@ -84,10 +100,10 @@ How to answer:
 3. Never invent facts, dates or quotes. If you don't know, say so and suggest where to look.
 4. French items keep their French titles; explain them in English.
 
-STORIES ON HER SCREEN:
+THIS WEEK'S PICKS ON HER SCREEN:
 ${onScreen.map((i) => describe(i, names.get(i.category) ?? i.category)).join("\n") || "(none)"}
 
-OTHER RECENT STORIES ON THE SITE:
+OTHER THINGS NOTICED THIS FORTNIGHT:
 ${pool.map((i) => describe(i, names.get(i.category) ?? i.category)).join("\n") || "(none)"}`;
 
   const history = (body.history ?? [])

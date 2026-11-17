@@ -4,27 +4,29 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { IconHeadphones, IconPause, IconPlay } from "./Icons";
 
 interface Props {
-  /** "briefing" for the morning briefing, otherwise the category id. */
-  kind: "briefing" | "section";
-  category?: string;
-  categoryName: string;
-  /** Edition date, YYYY-MM-DD. */
-  date: string;
-  /** Scripts, used for the browser fallback and the length estimate. */
-  short: string;
-  long?: string;
-  wordsShort: number;
-  wordsLong?: number;
-  stories: number;
-  /** Pre-generated MP3 for the short version, when the robot made one. */
+  /** Shown while idle, e.g. "Listen to today's Yam". */
+  title: string;
+  /** Lock-screen title. */
+  mediaTitle: string;
+  /** Small line under the title while idle, e.g. "4 min · Tuesday 18 November". */
+  subtitle: string;
+  /** The spoken text — for the phone-voice fallback, the transcript and the length estimate. */
+  text: string;
+  /** Pre-generated MP3, when the robot made one. */
   preparedUrl?: string;
-  /** "openai" = premium voice via /api/audio, "browser" = the phone's own voice. */
+  /** URL that generates (or finds) the MP3 on demand; may include {voice}. */
+  onDemandUrl: string;
   provider: "openai" | "browser";
   defaultVoice: string;
+  preparedVoice?: string;
+  /** Show a "Transcript" toggle. */
+  transcript?: boolean;
+  /** Accent colours, default Yam. */
+  ink?: string;
+  tint?: string;
 }
 
 const VOICE_KEY = "yam.voice";
-
 export function readChosenVoice(): string | null {
   try {
     return window.localStorage.getItem(VOICE_KEY);
@@ -32,16 +34,12 @@ export function readChosenVoice(): string | null {
     return null;
   }
 }
-
 function fmt(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
   return `${m}:${String(s).padStart(2, "0")}`;
 }
-
-/* ---------- browser voice fallback (the phone's own synthesiser) ---------- */
-
 function chunk(text: string, max = 220): string[] {
   const sentences = text.replace(/\s+/g, " ").trim().split(/(?<=[.!?…])\s+(?=[A-Z0-9“"'(])/);
   const out: string[] = [];
@@ -55,7 +53,6 @@ function chunk(text: string, max = 220): string[] {
   if (cur) out.push(cur);
   return out.filter(Boolean);
 }
-
 function pickBrowserVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefined {
   const en = voices.filter((v) => /^en[-_]/i.test(v.lang));
   for (const name of ["Daniel", "Kate", "Serena", "Oliver", "Google UK English Female", "Google UK English Male"]) {
@@ -65,39 +62,29 @@ function pickBrowserVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice 
   return en.find((v) => /en[-_]GB/i.test(v.lang)) ?? en[0] ?? voices[0];
 }
 
-export function RecapPlayer(props: Props) {
-  const { kind, category, categoryName, date, short, long, wordsShort, wordsLong, stories, preparedUrl, provider, defaultVoice } = props;
-  const [longMode, setLongMode] = useState(false);
+/** One tap-to-play card: premium MP3 (pre-made or on demand), phone voice as a fallback, lock-screen controls. */
+export function AudioPlayer(props: Props) {
+  const { title, mediaTitle, subtitle, text, preparedUrl, onDemandUrl, provider, defaultVoice, preparedVoice, transcript, ink, tint } = props;
   const [status, setStatus] = useState<"idle" | "loading" | "playing" | "paused" | "ended">("idle");
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
   const [usingBrowser, setUsingBrowser] = useState(provider === "browser");
   const [note, setNote] = useState<string | null>(null);
   const [voice, setVoice] = useState(defaultVoice);
+  const [showText, setShowText] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const speechChunks = useRef<string[]>([]);
 
   useEffect(() => {
     const chosen = readChosenVoice();
     if (chosen) setVoice(chosen);
   }, []);
 
-  const text = longMode && long ? long : short;
-  const words = longMode && wordsLong ? wordsLong : wordsShort;
-  const estMinutes = Math.max(1, Math.round(words / 150));
-  const hasLong = Boolean(long && wordsLong && long !== short);
-
+  const estMinutes = Math.max(1, Math.round(text.trim().split(/\s+/).length / 150));
   const sourceUrl = useMemo(() => {
-    if (!longMode && preparedUrl && voice === defaultVoice) return preparedUrl;
-    const p = new URLSearchParams({ kind, date, voice });
-    if (kind === "section" && category) {
-      p.set("category", category);
-      p.set("version", longMode ? "long" : "short");
-    }
-    return `/api/audio?${p.toString()}`;
-  }, [kind, category, date, longMode, preparedUrl, voice, defaultVoice]);
+    if (preparedUrl && voice === (preparedVoice ?? defaultVoice)) return preparedUrl;
+    return onDemandUrl.includes("{voice}") ? onDemandUrl.replace("{voice}", encodeURIComponent(voice)) : `${onDemandUrl}${onDemandUrl.includes("?") ? "&" : "?"}voice=${encodeURIComponent(voice)}`;
+  }, [preparedUrl, onDemandUrl, voice, defaultVoice, preparedVoice]);
 
-  // ----- premium voice via <audio>
   const ensureAudioElement = useCallback(() => {
     if (audioRef.current) return audioRef.current;
     const a = new Audio();
@@ -122,12 +109,7 @@ export function RecapPlayer(props: Props) {
     (a: HTMLAudioElement) => {
       if (!("mediaSession" in navigator)) return;
       try {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: kind === "briefing" ? "Morning briefing" : `${categoryName} — today's recap`,
-          artist: "The Daily Yam",
-          album: date,
-          artwork: [{ src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }],
-        });
+        navigator.mediaSession.metadata = new MediaMetadata({ title: mediaTitle, artist: "The Daily Yam", artwork: [{ src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }] });
         navigator.mediaSession.setActionHandler("play", () => a.play());
         navigator.mediaSession.setActionHandler("pause", () => a.pause());
         navigator.mediaSession.setActionHandler("seekbackward", () => {
@@ -137,22 +119,20 @@ export function RecapPlayer(props: Props) {
           a.currentTime = Math.min(a.duration || a.currentTime + 30, a.currentTime + 30);
         });
       } catch {
-        /* optional nicety */
+        /* optional */
       }
     },
-    [kind, categoryName, date],
+    [mediaTitle],
   );
 
-  // ----- browser voice fallback
   const speakWithBrowser = useCallback(() => {
     if (!("speechSynthesis" in window)) {
-      setNote("Your browser can't read aloud; the stories are below.");
+      setNote("Your browser can't read aloud; the text is below.");
       return;
     }
     const synth = window.speechSynthesis;
     synth.cancel();
     const chunks = chunk(text);
-    speechChunks.current = chunks;
     const v = pickBrowserVoice(synth.getVoices());
     chunks.forEach((c, i) => {
       const u = new SpeechSynthesisUtterance(c);
@@ -169,7 +149,7 @@ export function RecapPlayer(props: Props) {
   }, [text, estMinutes]);
 
   const stop = useCallback(() => {
-    if (usingBrowser && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    if (usingBrowser && typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
     const a = audioRef.current;
     if (a) {
       a.pause();
@@ -203,7 +183,6 @@ export function RecapPlayer(props: Props) {
       void a.play();
       return;
     }
-    // Fresh start: set the source and play synchronously inside the tap (iOS insists).
     a.src = sourceUrl;
     setMediaSession(a);
     setStatus("loading");
@@ -214,46 +193,38 @@ export function RecapPlayer(props: Props) {
     });
   };
 
-  const switchLength = () => {
-    stop();
-    setLongMode((v) => !v);
-  };
-
-  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+  const seek = (e: React.MouseEvent<HTMLSpanElement>) => {
     const a = audioRef.current;
     if (!a || usingBrowser || !duration) return;
+    e.stopPropagation();
     const rect = e.currentTarget.getBoundingClientRect();
-    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-    a.currentTime = ratio * duration;
+    a.currentTime = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width)) * duration;
   };
 
   useEffect(() => () => stop(), [stop]);
 
   const label = useMemo(() => {
-    if (status === "loading") return usingBrowser ? "Starting…" : longMode ? "Preparing the long version… up to a minute the first time" : "Preparing your recap… about half a minute the first time";
-    if (status === "playing") return kind === "briefing" ? "Playing the morning briefing" : `Playing the ${categoryName} recap`;
+    if (status === "loading") return preparedUrl ? "Starting…" : "Preparing… about twenty seconds the first time";
+    if (status === "playing") return `Playing — ${mediaTitle}`;
     if (status === "paused") return "Paused — tap to resume";
     if (status === "ended") return "That's all — tap to listen again";
-    return kind === "briefing" ? "Listen to the morning briefing" : "Listen to today's recap";
-  }, [status, usingBrowser, kind, categoryName]);
+    return title;
+  }, [status, preparedUrl, mediaTitle, title]);
 
   if (!text) return null;
   const shownDuration = duration || estMinutes * 60;
   const progress = shownDuration ? Math.min(1, current / shownDuration) : 0;
+  const vars = { ["--cat-ink" as string]: ink ?? "#5b4a7a", ["--cat-tint" as string]: tint ?? "#ede8f4" };
 
   return (
-    <div>
+    <div style={vars}>
       <button type="button" className="recap" onClick={toggle} aria-pressed={status === "playing"}>
         <span className="recap__play" aria-hidden="true">
           {status === "playing" || status === "loading" ? <IconPause /> : <IconPlay />}
         </span>
         <span className="recap__body">
           <span className="recap__title">{label}</span>
-          <span className="recap__sub">
-            {status === "idle" || status === "ended"
-              ? `${estMinutes} min · ${stories} ${stories === 1 ? "story" : "stories"}${usingBrowser ? " · your phone's voice" : ""}`
-              : `${fmt(current)} / ${fmt(shownDuration)}`}
-          </span>
+          <span className="recap__sub">{status === "idle" || status === "ended" ? `${subtitle}${usingBrowser ? " · your phone's voice" : ""}` : `${fmt(current)} / ${fmt(shownDuration)}`}</span>
           <span className="recap__bar" aria-hidden="true" onClick={seek} style={{ cursor: usingBrowser ? "default" : "pointer" }}>
             <span style={{ width: `${Math.round(progress * 100)}%` }} />
           </span>
@@ -263,14 +234,14 @@ export function RecapPlayer(props: Props) {
         </span>
       </button>
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
-        {hasLong ? (
-          <button type="button" className="recap__toggle" aria-pressed={longMode} onClick={switchLength}>
-            Long version · {Math.max(1, Math.round((wordsLong ?? 0) / 150))} min
-          </button>
-        ) : null}
         {status !== "idle" ? (
           <button type="button" className="recap__toggle" onClick={stop}>
             Stop
+          </button>
+        ) : null}
+        {transcript ? (
+          <button type="button" className="recap__toggle" aria-pressed={showText} onClick={() => setShowText((v) => !v)}>
+            {showText ? "Hide transcript" : "Transcript"}
           </button>
         ) : null}
         {!usingBrowser ? (
@@ -280,6 +251,21 @@ export function RecapPlayer(props: Props) {
         ) : null}
       </div>
       {note ? <p className="recap__note">{note}</p> : null}
+      {transcript && showText ? (
+        <div className="transcript">
+          {text.split(/\n{2,}|(?<=[.!?…])\s+(?=[A-Z“"])/).reduce<string[][]>(
+            (acc, s) => {
+              const last = acc[acc.length - 1];
+              if (last.join(" ").length > 420) acc.push([s]);
+              else last.push(s);
+              return acc;
+            },
+            [[]],
+          ).map((para, i) => (
+            <p key={i}>{para.join(" ")}</p>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

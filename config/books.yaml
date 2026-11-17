@@ -1,0 +1,17 @@
+# =====================================================================
+#  THE DAILY YAM — Bookshelf
+#  ---------------------------------------------------------------------
+#  Les livres que Yamuna a lus et veut pouvoir se remettre en mémoire.
+#  Une ligne par livre : titre, auteur, et si on veut une note (année de
+#  lecture, édition, souvenir). L'onglet Bookshelf fabrique pour chaque
+#  livre une fiche « Remember this book » (texte + audio de 4–5 minutes)
+#  à la première ouverture, et le Weekly tire un « book of the week ».
+#
+#  Alimentation : Yamuna photographie ses étagères, Claude en extrait les
+#  titres, elle valide, et la liste atterrit ici.
+# =====================================================================
+
+books: []
+#  - title: Great Expectations
+#    author: Charles Dickens
+#    note: "read at university"

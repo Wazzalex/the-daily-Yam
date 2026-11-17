@@ -1,11 +1,10 @@
-# The morning robot: produces the day's edition, commits it into data/, and Vercel
-# redeploys the site from that commit.
+# The robots. Every morning: the Daily Yam (a 4-minute spoken piece). Saturdays: the Weekly Yam
+# (per section, 2 to listen + 2 to read), the Words session and the book of the week.
+# Each run commits data/ and Vercel redeploys the site from that commit.
 #
-# Scheduling note — GitHub does NOT start scheduled workflows on time: it queues them
-# and starts them when it has capacity, often hours late. So instead of asking
-# "is it six o'clock?", every scheduled run asks "has today's edition been published
-# yet?" and does the work if not. Several slots are registered so that the first one
-# to actually start takes care of the day; the later ones find the edition and stop.
+# Scheduling note — GitHub does NOT start scheduled workflows on time: it queues them and starts
+# them when it has capacity, often hours late. So every scheduled run asks "has today's Daily been
+# published yet?" (the robot does the same for the Weekly) rather than "is it six o'clock?".
 
 name: Morning edition
 
@@ -18,18 +17,22 @@ on:
     - cron: "0 7 * * *"    # 08:00 / 09:00 Paris — safety net
   workflow_dispatch:
     inputs:
-      category:
-        description: "Only one section (id from config/sources.yaml), empty = all"
-        required: false
-        default: ""
+      weekly:
+        description: "Also build the Weekly now (any day)"
+        type: boolean
+        default: false
+      force:
+        description: "Redo today's Daily / this week's Weekly even if present"
+        type: boolean
+        default: false
       dry_run:
         description: "Dry run: only check that sources answer (no Claude, nothing committed)"
         type: boolean
         default: false
-      force:
-        description: "Run even if today's edition already exists (re-run the day)"
-        type: boolean
-        default: false
+      category:
+        description: "Collect one section only (id from config/sources.yaml)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -48,23 +51,23 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Has today's edition been published yet?
+      - name: Has today's Daily been published yet?
         id: gate
         env:
           FORCE: ${{ github.event.inputs.force }}
           EVENT: ${{ github.event_name }}
         run: |
           TODAY=$(TZ=Europe/Paris date +%Y-%m-%d)
-          NOW=$(TZ=Europe/Paris date +%H:%M)
-          echo "Paris time: $TODAY $NOW"
+          DOW=$(TZ=Europe/Paris date +%A)
+          echo "Paris time: $DOW $TODAY $(TZ=Europe/Paris date +%H:%M)"
           if [ "$EVENT" = "workflow_dispatch" ]; then
             echo "Manual run — going ahead."
             echo "run=true" >> "$GITHUB_OUTPUT"
-          elif [ -f "data/days/$TODAY.json" ] && [ "$FORCE" != "true" ]; then
-            echo "Edition of $TODAY already published — nothing to do."
+          elif [ -f "data/daily/$TODAY.json" ] && [ "$FORCE" != "true" ]; then
+            echo "Daily of $TODAY already published — nothing to do."
             echo "run=false" >> "$GITHUB_OUTPUT"
           else
-            echo "No edition for $TODAY yet — running the robot."
+            echo "No Daily for $TODAY yet — running the robot."
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -88,16 +91,18 @@ jobs:
           TZ: Europe/Paris
         run: |
           ARGS=""
-          if [ -n "${{ github.event.inputs.category }}" ]; then ARGS="$ARGS --category=${{ github.event.inputs.category }}"; fi
+          if [ "${{ github.event.inputs.weekly }}" = "true" ]; then ARGS="$ARGS --weekly"; fi
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then ARGS="$ARGS --force"; fi
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
+          if [ -n "${{ github.event.inputs.category }}" ]; then ARGS="$ARGS --category=${{ github.event.inputs.category }}"; fi
           npx tsx scripts/aggregate.ts $ARGS
 
-      - name: Commit today's edition
+      - name: Commit the edition
         if: steps.gate.outputs.run == 'true' && github.event.inputs.dry_run != 'true'
         run: |
           TODAY=$(TZ=Europe/Paris date +%Y-%m-%d)
-          if [ ! -f "data/days/$TODAY.json" ]; then
-            echo "::error::The robot finished but produced no edition for $TODAY."
+          if [ ! -f "data/daily/$TODAY.json" ] && [ "${{ github.event.inputs.weekly }}" != "true" ]; then
+            echo "::error::The robot finished but produced no Daily for $TODAY."
             exit 1
           fi
           git config user.name "The Daily Yam robot"
@@ -106,11 +111,31 @@ jobs:
           if git diff --cached --quiet; then
             echo "Nothing new to commit."
           else
-            git commit -m "Edition of $TODAY"
-            # Another commit may have landed meanwhile (a code push): rebase, then push with a few retries.
+            MSG="Daily of $TODAY"
+            if ls data/weekly/$TODAY.json >/dev/null 2>&1; then MSG="Weekly and Daily of $TODAY"; fi
+            git commit -m "$MSG"
             for attempt in 1 2 3; do
               git pull --rebase origin main && git push origin HEAD:main && break
               echo "Push attempt $attempt failed, retrying…"
               sleep 10
             done
+          fi
+
+      # Belt and braces for the audio: once Vercel has deployed the new edition, ask the site itself
+      # to prepare today's MP3 (it uses Vercel's own Blob token, independent of the GitHub secret).
+      - name: Warm today's audio on the live site
+        if: steps.gate.outputs.run == 'true' && github.event.inputs.dry_run != 'true'
+        continue-on-error: true
+        run: |
+          SITE="https://www.the-daily-yam.com"
+          TODAY=$(TZ=Europe/Paris date +%Y-%m-%d)
+          for i in $(seq 1 30); do
+            LIVE=$(curl -s -m 20 "$SITE/api/health" | sed -n 's/.*"daily":"\([0-9-]*\)".*/\1/p')
+            if [ "$LIVE" = "$TODAY" ]; then echo "Site serves $TODAY after ~$((i*20))s"; break; fi
+            sleep 20
+          done
+          if [ "$LIVE" != "$TODAY" ]; then echo "Site not updated yet; the audio will be made on first play."; exit 0; fi
+          curl -s -m 280 -o /dev/null -w "daily audio: HTTP %{http_code}\n" "$SITE/api/audio?kind=daily&date=$TODAY&json=1"
+          if ls data/words/$TODAY.json >/dev/null 2>&1; then
+            curl -s -m 280 -o /dev/null -w "words drill: HTTP %{http_code}\n" "$SITE/api/audio?kind=drill&date=$TODAY&json=1"
           fi
