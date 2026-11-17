@@ -1,0 +1,101 @@
+{
+ "date": "2026-11-17",
+ "weekOf": "2026-11-16",
+ "generatedAt": "2026-11-17T17:35:25.719Z",
+ "greeting": "Good morning, Yamuna. Garner's *Red Shift* is back in your ears this week, and a little of *Daphnis and Chloe* might suit a slow weekend.",
+ "picks": {
+  "literature": [
+   {
+    "itemId": "814b05e84ab24cff",
+    "mode": "listen",
+    "why": "A long, rich conversation about Garner's layered, history-haunted novel, ideal for a drive and for anyone who loves narrative voice and history through fiction."
+   },
+   {
+    "itemId": "6fe03fb47ef02ce2",
+    "mode": "listen",
+    "why": "Douglass's Narrative is among the great first-person voices, and Melvyn Bragg's guests place it firmly in its history. It is a good hour for the car."
+   },
+   {
+    "itemId": "5b84488c67b5b039",
+    "mode": "read",
+    "why": "Music, history and fiction meet in an imagined friendship between Ravel and Vaughan Williams, exactly the kind of novel you enjoy."
+   },
+   {
+    "itemId": "7ffdf699525e8688",
+    "mode": "read",
+    "why": "A tribute to lyrical, musical prose from one of the oldest pastoral romances, which opens with a prayer for pleasure and comfort."
+   }
+  ],
+  "art": [
+   {
+    "itemId": "98e927057a616b92",
+    "mode": "listen",
+    "why": "A single Front Row episode joins a novel about Ravel and Vaughan Williams with Bloomsbury painting: fiction, music and art, made for your commute."
+   },
+   {
+    "itemId": "bd5a859028f643df",
+    "mode": "listen",
+    "why": "Van Eyck's portraits are almost literary in their detail, and here curators explain how he made faces feel alive."
+   },
+   {
+    "itemId": "9ca51167ebeaf329",
+    "mode": "read",
+    "why": "A murdered model, a Goncourt-winning novel and a forgotten case: a painting's story that does what you love, teaching history through fiction."
+   },
+   {
+    "itemId": "56df96e13927a6a2",
+    "mode": "read",
+    "why": "A thoughtful piece on reading a painter's private life into his canvases, much as one reads an author into a novel."
+   }
+  ],
+  "watch": [
+   {
+    "itemId": "ae4f57b023ecf3a2",
+    "mode": "listen",
+    "why": "A painter's quiet experiments in Aix-en-Provence, told in under an hour, should suit your love of paintings that speak to literature."
+   },
+   {
+    "itemId": "90d3570457c02d61",
+    "mode": "listen",
+    "why": "History told through ordinary voices rather than generals, which is very much how a good novel teaches it."
+   },
+   {
+    "itemId": "286a0accd6f0b1b6",
+    "mode": "read",
+    "why": "A lost love, Etruscan tombs and Josh O'Connor: a romantic, atmospheric story you can step into without any preparation."
+   },
+   {
+    "itemId": "534184ed1c6e3f3d",
+    "mode": "read",
+    "why": "A singular, tragic artistic life, and a change from the history documentaries, on a platform you already use."
+   }
+  ],
+  "world": [
+   {
+    "itemId": "3a732585b335a9fe",
+    "mode": "listen",
+    "why": "A history lesson told through a place: a granite basilica in the mountains, and the war dead it holds. Short enough for one drive."
+   },
+   {
+    "itemId": "fb0cfd096de442ad",
+    "mode": "listen",
+    "why": "A real life story, well told, from a Newcastle childhood to a medical career. It suits a long, unhurried drive."
+   },
+   {
+    "itemId": "e13eea298313f990",
+    "mode": "read",
+    "why": "A first-person narrator with a hard question at its heart, and there is an audio version read aloud for the car."
+   },
+   {
+    "itemId": "34893789ad9da21d",
+    "mode": "read",
+    "why": "A bold historical idea, from the steppe to the sea, that makes you rethink how states began."
+   }
+  ]
+ },
+ "usage": {
+  "inputTokens": 50376,
+  "outputTokens": 29042,
+  "calls": 16
+ }
+}
