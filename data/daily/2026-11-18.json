@@ -1,0 +1,528 @@
+{
+ "date": "2026-11-18",
+ "generatedAt": "2026-11-18T12:00:19.522Z",
+ "script": "Good morning, Yamuna, and happy Wednesday. I've gathered a few things for you today that sit nicely alongside one another, and I'll start with something to look at.\n\nThe National Gallery in London has opened Van Eyck: The Portraits, and for the first time the master's portraits have been gathered together in one place. The Guardian's reviewer calls the show a jewel box of phenomenal, death-defeating paintings, and the review is written with real vividness too, the kind of prose that makes you want to stand in front of the pictures. It's a lovely reminder that a face painted six centuries ago can still seem to be looking back at you.\n\nFrom faces to voices. The Guardian also reviews Gjak, by Dimosthenis Papamarkos, a book of nine interlinked tales set during the Greco-Turkish war of nineteen nineteen to nineteen twenty-two. They are stories of ambushes and vendettas, and the reviewer calls them sensational. It's translated from Greek and from Arvanitic, which is a detail I rather love: a war told in the languages of the people who lived through it. If you enjoy learning history through fiction, this one looks like a way in to a conflict many of us were never taught properly.\n\nAnd if war and fiction are on your mind, there's a conversation worth saving for the car. The London Review of Books podcast has the novelist Mathias Énard talking with the writer Lea Ypi about his novel Perfecting the Shot, which follows a teenage sniper in a civil war. It runs just over an hour, so perhaps it's one for a longer drive or a weekend walk, but two such thoughtful minds on a book with such a difficult narrator should be well worth the time.\n\nSpeaking of narrators, and I think you'll enjoy this one, Literary Hub has a piece called The Most Terrific Liar You Ever Saw in Your Life, a selection of six novels with unreliable narrators. It opens with a reflection on The Catcher in the Rye, and that title comes from Holden Caulfield himself. It might give you a few ideas for the classroom, or simply a few new liars to spend time with.\n\nLast, something to watch. The Last Spy is a documentary about Peter Sichel, a refugee who became a cold war spy, nicknamed the Jewish James Bond. He told his story at the age of one hundred, and the Guardian's reviewer finds it riveting, a tale of CIA meddling, espionage gossip and Blue Nun wine. I can't tell you from the review where to find it, so you may need to do a little detective work of your own, which seems fitting.\n\nAnd one good thing before you go: Ten years of progress, on the BBC World Service's The Documentary. Myra Anubi talks with three contributors to mark ten years of People Fixing the World, looking back at the gains in healthcare, sanitation and the environment since twenty sixteen.\n\nHave a lovely day, Yamuna, and I hope something here keeps you company on the road.",
+ "words": 507,
+ "teaser": "Van Eyck's portraits, a Greek war in nine tales, and a spy who told all at a hundred.",
+ "itemIds": [
+  "c98647b162f5883e",
+  "84f21f446f4af70a",
+  "a8b7ca037081eccd",
+  "cdd66292b85c1afd",
+  "01d7d188e9c26da4",
+  "a88f0bc3171d8e19"
+ ],
+ "newCandidates": 43,
+ "sources": [
+  {
+   "category": "art",
+   "name": "BBC Radio 4 — Front Row",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 2000,
+   "kept": 4,
+   "ms": 844
+  },
+  {
+   "category": "art",
+   "name": "Beaux Arts Magazine",
+   "type": "rss",
+   "ok": true,
+   "fetched": 12,
+   "kept": 9,
+   "ms": 1150
+  },
+  {
+   "category": "art",
+   "name": "Grandes expositions à Paris (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 31,
+   "kept": 27,
+   "ms": 617
+  },
+  {
+   "category": "art",
+   "name": "Great Art Explained — YouTube",
+   "type": "youtube",
+   "ok": true,
+   "fetched": 15,
+   "kept": 0,
+   "ms": 231
+  },
+  {
+   "category": "art",
+   "name": "Hyperallergic",
+   "type": "rss",
+   "ok": true,
+   "fetched": 15,
+   "kept": 15,
+   "ms": 319
+  },
+  {
+   "category": "art",
+   "name": "Musée de Grenoble — expositions",
+   "type": "page",
+   "ok": true,
+   "fetched": 4,
+   "kept": 4,
+   "ms": 7686,
+   "note": "page: 1153 chars, 16 links"
+  },
+  {
+   "category": "art",
+   "name": "Talk Art",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 14,
+   "kept": 0,
+   "ms": 81
+  },
+  {
+   "category": "art",
+   "name": "The Guardian — Art and design",
+   "type": "rss",
+   "ok": true,
+   "fetched": 23,
+   "kept": 9,
+   "ms": 120
+  },
+  {
+   "category": "art",
+   "name": "The National Gallery — YouTube",
+   "type": "youtube",
+   "ok": true,
+   "fetched": 15,
+   "kept": 4,
+   "ms": 239
+  },
+  {
+   "category": "art",
+   "name": "The Week in Art (The Art Newspaper)",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 399,
+   "kept": 1,
+   "ms": 216
+  },
+  {
+   "category": "good",
+   "name": "Good News Network",
+   "type": "rss",
+   "ok": true,
+   "fetched": 50,
+   "kept": 11,
+   "ms": 178
+  },
+  {
+   "category": "good",
+   "name": "Positive News (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 3,
+   "kept": 3,
+   "ms": 367
+  },
+  {
+   "category": "good",
+   "name": "Reasons to be Cheerful",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 2,
+   "ms": 319
+  },
+  {
+   "category": "good",
+   "name": "The Optimist Daily",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 4,
+   "ms": 794
+  },
+  {
+   "category": "literature",
+   "name": "Backlisted",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 279,
+   "kept": 1,
+   "ms": 773
+  },
+  {
+   "category": "literature",
+   "name": "BBC Radio 4 — Bookclub",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 355,
+   "kept": 0,
+   "ms": 477
+  },
+  {
+   "category": "literature",
+   "name": "BBC Radio 4 — In Our Time",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 1122,
+   "kept": 2,
+   "ms": 1037
+  },
+  {
+   "category": "literature",
+   "name": "BBC Radio 4 — Open Book",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 108,
+   "kept": 1,
+   "ms": 629
+  },
+  {
+   "category": "literature",
+   "name": "BBC Radio 4 — This Cultural Life",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 169,
+   "kept": 0,
+   "ms": 575
+  },
+  {
+   "category": "literature",
+   "name": "BBC World Service — World Book Club",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 108,
+   "kept": 1,
+   "ms": 605
+  },
+  {
+   "category": "literature",
+   "name": "Booker Prize news",
+   "type": "news",
+   "ok": true,
+   "fetched": 24,
+   "kept": 12,
+   "ms": 471
+  },
+  {
+   "category": "literature",
+   "name": "Literary Hub",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 10,
+   "ms": 323
+  },
+  {
+   "category": "literature",
+   "name": "London Review of Books",
+   "type": "rss",
+   "ok": true,
+   "fetched": 21,
+   "kept": 0,
+   "ms": 415
+  },
+  {
+   "category": "literature",
+   "name": "London Review of Books — Podcast",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 737,
+   "kept": 1,
+   "ms": 650
+  },
+  {
+   "category": "literature",
+   "name": "Slightly Foxed",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 61,
+   "kept": 0,
+   "ms": 619
+  },
+  {
+   "category": "literature",
+   "name": "The Guardian — Books",
+   "type": "rss",
+   "ok": true,
+   "fetched": 29,
+   "kept": 4,
+   "ms": 42
+  },
+  {
+   "category": "literature",
+   "name": "The Guardian Books Podcast",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 82,
+   "kept": 0,
+   "ms": 614
+  },
+  {
+   "category": "literature",
+   "name": "The New York Times — Books",
+   "type": "rss",
+   "ok": true,
+   "fetched": 35,
+   "kept": 11,
+   "ms": 480
+  },
+  {
+   "category": "literature",
+   "name": "The New Yorker — Books",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 1,
+   "ms": 168
+  },
+  {
+   "category": "literature",
+   "name": "The New Yorker — Fiction",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 237,
+   "kept": 0,
+   "ms": 466
+  },
+  {
+   "category": "literature",
+   "name": "The Paris Review — The Daily",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 3,
+   "ms": 234
+  },
+  {
+   "category": "watch",
+   "name": "Arte — documentaires et séries (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 28,
+   "kept": 15,
+   "ms": 506
+  },
+  {
+   "category": "watch",
+   "name": "ARTE Concert — YouTube",
+   "type": "youtube",
+   "ok": true,
+   "fetched": 15,
+   "kept": 15,
+   "ms": 101
+  },
+  {
+   "category": "watch",
+   "name": "BBC — Entertainment and arts",
+   "type": "rss",
+   "ok": true,
+   "fetched": 23,
+   "kept": 18,
+   "ms": 356
+  },
+  {
+   "category": "watch",
+   "name": "BBC Radio 3 — Music Matters",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 148,
+   "kept": 0,
+   "ms": 347
+  },
+  {
+   "category": "watch",
+   "name": "Classical music documentaries (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 14,
+   "kept": 11,
+   "ms": 486
+  },
+  {
+   "category": "watch",
+   "name": "Dance documentaries (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 16,
+   "kept": 15,
+   "ms": 517
+  },
+  {
+   "category": "watch",
+   "name": "New thriller series (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 28,
+   "kept": 16,
+   "ms": 476
+  },
+  {
+   "category": "watch",
+   "name": "Radio Times",
+   "type": "rss",
+   "ok": true,
+   "fetched": 30,
+   "kept": 30,
+   "ms": 193
+  },
+  {
+   "category": "watch",
+   "name": "Royal Ballet and Opera — YouTube",
+   "type": "youtube",
+   "ok": true,
+   "fetched": 15,
+   "kept": 13,
+   "ms": 361
+  },
+  {
+   "category": "watch",
+   "name": "The Guardian — Classical music and opera",
+   "type": "rss",
+   "ok": true,
+   "fetched": 19,
+   "kept": 0,
+   "ms": 356
+  },
+  {
+   "category": "watch",
+   "name": "The Guardian — Dance",
+   "type": "rss",
+   "ok": true,
+   "fetched": 20,
+   "kept": 1,
+   "ms": 365
+  },
+  {
+   "category": "watch",
+   "name": "The Guardian — TV and radio",
+   "type": "rss",
+   "ok": true,
+   "fetched": 16,
+   "kept": 6,
+   "ms": 306
+  },
+  {
+   "category": "watch",
+   "name": "The Rest Is Entertainment",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 335,
+   "kept": 3,
+   "ms": 208
+  },
+  {
+   "category": "watch",
+   "name": "What's on Netflix",
+   "type": "rss",
+   "ok": true,
+   "fetched": 50,
+   "kept": 26,
+   "ms": 271
+  },
+  {
+   "category": "world",
+   "name": "Aeon",
+   "type": "rss",
+   "ok": true,
+   "fetched": 20,
+   "kept": 2,
+   "ms": 976
+  },
+  {
+   "category": "world",
+   "name": "BBC — The Global Story",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 694,
+   "kept": 5,
+   "ms": 354
+  },
+  {
+   "category": "world",
+   "name": "BBC News — Long reads and features",
+   "type": "rss",
+   "ok": true,
+   "fetched": 17,
+   "kept": 0,
+   "ms": 871
+  },
+  {
+   "category": "world",
+   "name": "BBC Radio 4 — Desert Island Discs",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 2000,
+   "kept": 1,
+   "ms": 2198
+  },
+  {
+   "category": "world",
+   "name": "BBC Radio 4 — From Our Own Correspondent",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 1266,
+   "kept": 1,
+   "ms": 1487
+  },
+  {
+   "category": "world",
+   "name": "BBC Radio 4 — Start the Week",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 665,
+   "kept": 1,
+   "ms": 501
+  },
+  {
+   "category": "world",
+   "name": "BBC World Service — The Documentary",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 2000,
+   "kept": 8,
+   "ms": 1850
+  },
+  {
+   "category": "world",
+   "name": "The Economist — The Intelligence",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 2067,
+   "kept": 5,
+   "ms": 1214
+  },
+  {
+   "category": "world",
+   "name": "The Guardian — The Audio Long Read",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 300,
+   "kept": 3,
+   "ms": 266
+  },
+  {
+   "category": "world",
+   "name": "The Guardian — The Long Read",
+   "type": "rss",
+   "ok": true,
+   "fetched": 20,
+   "kept": 2,
+   "ms": 724
+  },
+  {
+   "category": "world",
+   "name": "The Guardian — UK",
+   "type": "rss",
+   "ok": true,
+   "fetched": 45,
+   "kept": 35,
+   "ms": 23
+  }
+ ],
+ "usage": {
+  "inputTokens": 32515,
+  "outputTokens": 23139,
+  "calls": 11
+ }
+}
