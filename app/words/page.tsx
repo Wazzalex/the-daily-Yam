@@ -7,7 +7,7 @@ import { AudioPlayer } from "@/components/AudioPlayer";
 import { NavPills } from "@/components/NavPills";
 import { WordsClient } from "@/components/WordsClient";
 import { EmptyState } from "@/components/EmptyState";
-import { drillScript } from "@/lib/tts";
+import { drillScript, estimateSeconds } from "@/lib/tts";
 
 export const dynamic = "force-static";
 export const metadata: Metadata = { title: "Words" };
@@ -36,15 +36,15 @@ export default function WordsPage() {
           </div>
           <h1 className="band__title">Words</h1>
           <p className="band__tagline">Twenty from your notebook each week, mixed across its sections, to hear, repeat and test yourself on.</p>
-          {session?.drill ? (
+          {session ? (
             <div style={{ marginTop: 14 }}>
               <AudioPlayer
                 title="Play the whole drill"
                 mediaTitle={`Words — ${shortDate(session.date)}`}
-                subtitle={`${Math.max(1, Math.round(session.drill.seconds / 60))} min · ${session.entries.length} entries · for the car`}
+                subtitle={`${Math.max(1, Math.round((session.drill?.seconds ?? estimateSeconds(drillScript(session.entries)) + session.entries.length * 4) / 60))} min · ${session.entries.length} entries · for the car`}
                 text={drillScript(session.entries)}
-                preparedUrl={session.drill.url}
-                preparedVoice={session.drill.voice}
+                preparedUrl={session.drill?.url}
+                preparedVoice={session.drill?.voice}
                 onDemandUrl={`/api/audio?kind=drill&date=${session.date}`}
                 provider={config.audio.provider}
                 defaultVoice={config.audio.voice}
