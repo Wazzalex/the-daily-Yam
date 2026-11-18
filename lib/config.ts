@@ -66,7 +66,7 @@ export function loadConfig(): SiteConfig {
   };
   raw.editions.weekly.per_section = { listen: 2, read: 2, ...(given.weekly?.per_section ?? {}) };
 
-  raw.words = { marker: "Add your words below this line", per_week: 20, review_after_weeks: 3, ...(((raw as Partial<SiteConfig>).words ?? {}) as Partial<SiteConfig["words"]>) };
+  raw.words = { per_week: 20, review_after_weeks: 3, review_share: 0.25, max_per_theme: 4, ...(((raw as Partial<SiteConfig>).words ?? {}) as Partial<SiteConfig["words"]>) };
 
   cached = raw;
   return raw;

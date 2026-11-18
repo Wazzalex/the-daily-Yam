@@ -25,24 +25,29 @@ import { fetchNews, fetchPage, fetchPodcast, fetchRss, fetchYoutube, type RawIte
 import { mapLimit } from "./lib/http";
 import {
   latestWeeklyDate,
+  latestWordsDate,
   prune,
   readCache,
   readDaily,
   readPool,
   readRefresher,
   readWeekly,
+  readWeeklyTitles,
   readWordsRegistry,
+  readWordsSnapshot,
   recentBookSlugs,
   writeCache,
   writeDaily as saveDaily,
   writePool,
   writeRefresher as saveRefresher,
   writeWeekly as saveWeekly,
+  writeWeeklyEdition as saveWeeklyEdition,
   writeWordsRegistry,
   writeWordsSession,
+  writeWordsSnapshot,
 } from "./lib/store";
 import { normalizeUrl, sha1 } from "./lib/text";
-import { fetchWordsDocument, normaliseTerm, parseWordsDocument } from "./lib/words-doc";
+import { loadNotebook, parseNotebook, pickNewEntries } from "./lib/words-doc";
 
 const args = new Set(process.argv.slice(2));
 const flag = (name: string) => [...args].find((a) => a.startsWith(`--${name}=`))?.split("=")[1];
@@ -50,7 +55,8 @@ const DRY = args.has("--dry-run");
 const FORCE = args.has("--force");
 const ONLY = flag("category");
 const WANT_WEEKLY = args.has("--weekly");
-const NO_DAILY = args.has("--no-daily");
+const WANT_WORDS = args.has("--words"); // only the Words session, from the notebook (any day)
+const NO_DAILY = args.has("--no-daily") || WANT_WORDS;
 
 const log = (...a: unknown[]) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
@@ -399,36 +405,39 @@ async function buildWordsSession(today: string, weekTitles: string[]): Promise<W
     log("  words: no google_doc_id in config");
     return null;
   }
-  const text = await fetchWordsDocument(config.words.google_doc_id);
-  const all = parseWordsDocument(text, config.words.marker);
+  const { paragraphs, source, warning } = await loadNotebook(config.words.google_doc_id, readWordsSnapshot());
+  if (warning) log(`  words: ${warning}`);
+  if (source === "live") writeWordsSnapshot({ docId: config.words.google_doc_id, fetchedAt: new Date().toISOString(), paragraphs });
+  const all = parseNotebook(paragraphs);
   if (!all.length) {
-    log("  words: the document has no entries yet");
+    log("  words: the notebook has no entries yet");
     return null;
   }
   const registry = readWordsRegistry();
   const reviewCut = daysAgo(today, config.words.review_after_weeks * 7);
-  const fresh = all.filter((w) => !registry[normaliseTerm(w.term)]);
+  const fresh = all.filter((w) => !registry[w.key]);
   const due = all.filter((w) => {
-    const r = registry[normaliseTerm(w.term)];
+    const r = registry[w.key];
     return r && (!r.lastReviewed || r.lastReviewed <= reviewCut);
   });
-  // Up to per_week: new words first (newest additions last in the doc → take from the end), then reviews, oldest review first.
+  due.sort((a, b) => (registry[a.key].lastReviewed ?? "").localeCompare(registry[b.key].lastReviewed ?? ""));
+
   const perWeek = config.editions.weekly.words_per_week || config.words.per_week;
-  const chosenNew = fresh.slice(-perWeek);
-  const slots = perWeek - chosenNew.length;
-  due.sort((a, b) => (registry[normaliseTerm(a.term)].lastReviewed ?? "").localeCompare(registry[normaliseTerm(b.term)].lastReviewed ?? ""));
-  const chosen = [...chosenNew.map((w) => ({ ...w, review: false })), ...due.slice(0, Math.max(0, slots)).map((w) => ({ ...w, review: true }))];
+  const reviewSlots = Math.min(due.length, Math.round(perWeek * config.words.review_share));
+  const chosenNew = pickNewEntries(fresh, perWeek - reviewSlots, config.words.max_per_theme, today);
+  const chosenDue = due.slice(0, Math.max(reviewSlots, perWeek - chosenNew.length)).slice(0, perWeek - chosenNew.length);
+  const chosen = [...chosenNew.map((w) => ({ ...w, review: false })), ...chosenDue.map((w) => ({ ...w, review: true }))];
   if (!chosen.length) {
     log("  words: nothing new and nothing due for review");
     return null;
   }
   const entries: WordEntry[] = await buildWordEntries(config, chosen, weekTitles);
-  const session: WordsSession = { date: today, generatedAt: new Date().toISOString(), entries, docEntries: all.length, newEntries: chosenNew.length };
+  const session: WordsSession = { date: today, generatedAt: new Date().toISOString(), entries, docEntries: all.length, newEntries: chosenNew.length, source };
 
   for (const w of chosen) {
-    const key = normaliseTerm(w.term);
-    const prev = registry[key];
-    registry[key] = { term: w.term, firstSeen: prev?.firstSeen ?? today, lastReviewed: today, times: (prev?.times ?? 0) + 1 };
+    const prev = registry[w.key];
+    const built = entries.find((e) => e.key === w.key);
+    registry[w.key] = { term: built?.term ?? w.bold[0] ?? w.line.slice(0, 60), firstSeen: prev?.firstSeen ?? today, lastReviewed: today, times: (prev?.times ?? 0) + 1 };
   }
   writeWordsRegistry(registry);
 
@@ -455,7 +464,7 @@ async function buildWordsSession(today: string, weekTitles: string[]): Promise<W
     }
   }
   writeWordsSession(session);
-  log(`  words: ${entries.length} entries (${chosenNew.length} new, ${entries.length - chosenNew.length} review) from ${all.length} in the document`);
+  log(`  words: ${entries.length} entries (${chosenNew.length} new, ${entries.length - chosenNew.length} review) from ${all.length} in the notebook (${source})`);
   return session;
 }
 
@@ -488,8 +497,29 @@ async function main() {
     }
   }
 
+  // Words only: rebuild this week's session from the notebook, whatever the day.
+  if (WANT_WORDS && !DRY) {
+    const weekKey = mondayOf(today);
+    const existing = latestWordsDate();
+    if (existing && mondayOf(existing) === weekKey && !FORCE) {
+      log(`Words session of ${existing} already covers this week (use --force to redo).`);
+    } else {
+      const weekly = latestWeeklyDate();
+      const titles = weekly ? (readWeeklyTitles(weekly) ?? []) : [];
+      const session = await buildWordsSession(today, titles);
+      if (session) {
+        didSomething = true;
+        // Point this week's Weekly at the new session so the home page shows it.
+        if (weekly && mondayOf(weekly) === weekKey) {
+          const ed = readWeekly(weekly);
+          if (ed && ed.wordsSession !== session.date) saveWeeklyEdition({ ...ed, wordsSession: session.date });
+        }
+      }
+    }
+  }
+
   const isWeeklyDay = weekday === (config.editions.weekly.weekday || "saturday").toLowerCase();
-  if (!DRY && (WANT_WEEKLY || isWeeklyDay)) {
+  if (!DRY && !WANT_WORDS && (WANT_WEEKLY || isWeeklyDay)) {
     const weekKey = mondayOf(today);
     const latest = latestWeeklyDate();
     const alreadyThisWeek = Boolean(readWeekly(today)) || (latest !== null && mondayOf(latest) === weekKey);

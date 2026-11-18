@@ -183,8 +183,15 @@ export function WordsClient({ date, entries, provider }: Props) {
                   </span>
                   {e.review ? <span className="chip" style={{ background: "var(--paper)" }}>Review</span> : null}
                   {e.lang === "fr" ? <span className="flag">FR</span> : null}
+                  {e.theme ? <span className="word__theme">{e.theme}</span> : null}
                 </div>
-                {e.pronunciation ? <span className="word__pron">{e.pronunciation}</span> : null}
+                {e.pronunciation || e.usage ? (
+                  <span className="word__pron">
+                    {e.pronunciation}
+                    {e.pronunciation && e.usage ? " · " : ""}
+                    {e.usage}
+                  </span>
+                ) : null}
                 <p className="word__def">{e.definition}</p>
                 {e.example ? (
                   <p className="word__ex">
@@ -201,7 +208,9 @@ export function WordsClient({ date, entries, provider }: Props) {
                     {e.example}
                   </p>
                 ) : null}
-                {e.note ? <p className="word__note">Your note: {e.note}</p> : null}
+                {e.note && e.note.replace(/\W+/g, " ").trim().toLowerCase() !== e.example.replace(/\W+/g, " ").trim().toLowerCase() ? (
+                  <p className="word__note">In your notebook: {e.note}</p>
+                ) : null}
                 {hidden ? (
                   <button type="button" className="word__reveal" onClick={() => setRevealed(new Set([...revealed, i]))}>
                     Reveal

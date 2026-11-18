@@ -30,12 +30,12 @@ export default function WordsPage() {
             <span className="meta">{session ? `Session of ${shortDate(session.date)}` : ""}</span>
             {docUrl ? (
               <a href={docUrl} target="_blank" rel="noopener noreferrer" className="pill pill--small pill--plain" style={{ minHeight: 36 }}>
-                Add words
+                Open my notebook
               </a>
             ) : null}
           </div>
           <h1 className="band__title">Words</h1>
-          <p className="band__tagline">Twenty from your list each week, to hear, repeat and test yourself on.</p>
+          <p className="band__tagline">Twenty from your notebook each week, mixed across its sections, to hear, repeat and test yourself on.</p>
           {session?.drill ? (
             <div style={{ marginTop: 14 }}>
               <AudioPlayer
@@ -61,12 +61,12 @@ export default function WordsPage() {
         {!session ? (
           <EmptyState
             title="No session yet"
-            text={docUrl ? "Add a few words to your document; the first session is built on Saturday morning." : "The vocabulary document isn't connected yet."}
+            text={docUrl ? "The first session is built from your notebook on Saturday morning." : "The vocabulary notebook isn't connected yet."}
           />
         ) : (
           <>
             <p style={{ margin: "14px 0 0", fontSize: 14, color: "var(--ink-2)" }}>
-              {session.newEntries} new, {session.entries.length - session.newEntries} back for review · {session.docEntries} in your list
+              {session.newEntries} new, {session.entries.length - session.newEntries} back for review · {session.docEntries} in your notebook
             </p>
             <WordsClient date={session.date} entries={session.entries} provider={config.audio.provider} />
           </>

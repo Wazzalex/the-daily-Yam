@@ -256,10 +256,17 @@ Write the opening line. Start with "Good morning, Yamuna." and hint at one or tw
 
 // ---------------------------------------------------------------- Words
 
+/** One line of Yamuna's notebook, as the parser hands it over. */
 export interface RawWord {
-  term: string;
-  note?: string;
-  example?: string;
+  key: string;
+  /** The line as she wrote it (bullet and label removed). */
+  line: string;
+  theme?: string;
+  label?: string;
+  /** What she highlighted in bold, in order. */
+  bold: string[];
+  /** Her IPA, if any. */
+  pronunciation?: string;
 }
 
 export async function buildWordEntries(
@@ -267,29 +274,50 @@ export async function buildWordEntries(
   words: Array<RawWord & { review: boolean }>,
   weekContext: string[],
 ): Promise<WordEntry[]> {
-  const system = `You prepare a weekly vocabulary session for one learner, Yamuna, an English teacher living in France. Each entry is a word or expression she noted herself, in English or French. You write short, accurate definitions and natural example sentences. Reply with JSON only.`;
-  const list = words.map((w, i) => `#${i} ${w.term}${w.note ? ` — her note: ${w.note}` : ""}${w.example ? ` — her example: ${w.example}` : ""}`).join("\n");
-  const user = `This week's stories, for flavour (use them in examples when it fits naturally):
+  const system = `You prepare a weekly vocabulary session for one learner, Yamuna, an English teacher living in France (Grenoble). The entries come from her own vocabulary notebook: each is a line she wrote — usually a sentence from her life with the key word or expression highlighted, sometimes a bare word with a French gloss in brackets or after "=", sometimes several variants. Her notebook is British in flavour; keep it so. You identify the headword, define it precisely and give a natural example. Never invent meanings: when a line is obscure, define the most plausible sense and keep the definition short. Reply with JSON only.`;
+  const list = words
+    .map((w, i) => {
+      const bits = [`#${i}`];
+      if (w.theme) bits.push(`[${w.theme}]`);
+      if (w.label) bits.push(`label "${w.label}"`);
+      if (w.bold.length) bits.push(`highlighted: ${w.bold.map((b) => `"${b}"`).join(", ")}`);
+      if (w.pronunciation) bits.push(`her IPA: ${w.pronunciation}`);
+      return `${bits.join(" ")}\n   line: ${w.line}`;
+    })
+    .join("\n");
+  const user = `This week's stories, for flavour (echo them in an example only when it fits naturally):
 ${weekContext.slice(0, 12).map((t) => `- ${t}`).join("\n") || "(none)"}
 
-ENTRIES:
+ENTRIES (from her notebook; [section], her label, what she highlighted, then the line itself):
 ${list}
 
-For each entry return: "i", "lang" ("en" or "fr" — the language of the term itself), "term" (the term, spelling tidied, articles kept as she wrote them), "definition" (one clear sentence; in English for English terms, in English for French terms too, giving the French nuance), "example" (one natural sentence in the term's language using it, 10–20 words; if she gave an example, polish hers), "pronunciation" (short plain hint, e.g. "ser-en-DIP-i-ty"; for French give a plain hint too).
-Return a JSON array with exactly ${words.length} objects.`;
-  const text = await ask(SMART_MODEL, system, user, 5000);
-  const parsed = extractJson<Array<{ i?: number; lang?: string; term?: string; definition?: string; example?: string; pronunciation?: string }>>(text);
+For each entry return an object with:
+- "i": the entry number.
+- "term": the headword or expression to learn, as one would look it up — the highlighted part when there is one ("to dollop", "a mishap", "bunged up", "to take it in one's stride"); verbs with "to", countable nouns with "a"/"an", idioms in their base form. When the line is a bare word or a list of synonyms, the first word. When she highlighted two unrelated words, choose the more useful one.
+- "lang": "en" or "fr" — the language of the term itself (her lines are mostly English; a French label such as "COINCÉ" means the entry teaches the English equivalents, so "en").
+- "definition": one clear sentence in English. Fold in her gloss when she gave one (French in brackets or after "=") and the sense her label points to.
+- "example": one natural sentence using the term, 8–22 words. If her line is already a proper sentence, use it, lightly tidied (spelling, punctuation), keeping her people (Auryn, Ella, Alexandre, Papa, Maman, her students) and her places. Otherwise write one in her world: a teacher, a mother of two, the Alps near Grenoble. No brackets, no glosses, no slashes inside the example — it will be read aloud.
+- "pronunciation": the headword in British IPA between slashes, e.g. "/ˈdɒləp/"; reuse hers when she gave one. For a French term, French IPA.
+- "usage": at most six words on register or origin when it matters ("informal, British", "Cockney rhyming slang", "literary"), otherwise "".
+Return a JSON array with exactly ${words.length} objects, in order.`;
+  const text = await ask(SMART_MODEL, system, user, 6000);
+  const parsed = extractJson<Array<{ i?: number; lang?: string; term?: string; definition?: string; example?: string; pronunciation?: string; usage?: string }>>(text);
   const byIndex = new Map<number, (typeof parsed)[number]>();
   parsed.forEach((p, idx) => byIndex.set(typeof p.i === "number" ? p.i : idx, p));
   return words.map((w, i) => {
     const p = byIndex.get(i);
+    const fallbackTerm = w.bold[0] ?? w.line.split(/[=(;/]/)[0].trim();
+    const example = (p?.example ?? "").trim() || (/[.!?]$/.test(w.line) && w.line.length < 160 ? w.line : "");
     return {
-      term: (p?.term ?? w.term).trim(),
+      key: w.key,
+      term: (p?.term ?? fallbackTerm).trim() || fallbackTerm,
       lang: p?.lang === "fr" ? "fr" : "en",
-      note: w.note,
+      theme: w.theme,
+      note: w.line,
       definition: (p?.definition ?? "").trim(),
-      example: (p?.example ?? w.example ?? "").trim(),
-      pronunciation: (p?.pronunciation ?? "").trim() || undefined,
+      example,
+      pronunciation: (p?.pronunciation ?? w.pronunciation ?? "").trim() || undefined,
+      usage: (p?.usage ?? "").trim() || undefined,
       review: w.review,
     };
   });

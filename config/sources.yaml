@@ -114,12 +114,16 @@ audio:
     on France Culture would read a single word and an example sentence.
   speed: 1.0
 
-# Vocabulaire : le Google Doc que Yamuna remplit. Le robot le lit chaque samedi.
+# Vocabulaire : le carnet Google Doc de Yamuna (« Fiche vocabulaire - the daily Yam »).
+# Le robot lit son format tel quel : sections par thème, une entrée par ligne, mot clé en gras,
+# API, traduction entre parenthèses ou après « = ». Lu en direct si le Doc est partagé par lien,
+# sinon depuis la copie data/words/source.json (voir README, « Le carnet de vocabulaire »).
 words:
-  google_doc_id: 1r2SbwuwFgMnkuLr87QS5R1yjlbpZMc0ACj061qg8IlA
-  marker: "Add your words below this line"   # tout ce qui précède est ignoré
+  google_doc_id: 1LRXLsUZxcIo8eGyezOd09HNtK2J72BNWTdMGOh_ieQE
   per_week: 20
+  review_share: 0.25           # un quart de la session en révision (5 sur 20), quand il y a des mots à revoir
   review_after_weeks: 3        # un mot revient en révision après 3 semaines sans passage
+  max_per_theme: 4             # au plus 4 entrées d'une même section du carnet par session
 
 # Étagère : la liste des livres est dans config/books.yaml (titres + auteurs).
 

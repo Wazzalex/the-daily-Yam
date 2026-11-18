@@ -1075,6 +1075,16 @@ button {
   font-size: 13px;
   color: var(--ink-2);
 }
+.word__theme {
+  margin-left: auto;
+  font-family: var(--font-hand);
+  font-size: 14px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 45%;
+}
 .word__def {
   margin: 0;
   font-size: 15px;

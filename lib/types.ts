@@ -97,17 +97,23 @@ export interface WeeklyEdition {
 // ---------------------------------------------------------------- Words
 
 export interface WordEntry {
-  /** The word or expression as written by Yamuna. */
+  /** Stable key in the notebook (for the registry). */
+  key?: string;
+  /** The headword or expression, as one would look it up ("to dollop", "a mishap"). */
   term: string;
   lang: "en" | "fr";
-  /** Her own meaning/note, if she wrote one. */
+  /** The section of her notebook the entry comes from ("FOOD & beverages"). */
+  theme?: string;
+  /** The line as she wrote it in her notebook. */
   note?: string;
-  /** Short definition in the term's language (or English for French terms). */
+  /** Short definition in English (with the French nuance for French terms). */
   definition: string;
-  /** Example sentence written by Claude, ideally echoing the week's stories. */
+  /** Example sentence: hers, polished, or written by Claude. */
   example: string;
-  /** IPA or plain pronunciation hint. */
+  /** IPA (British), hers when she wrote one. */
   pronunciation?: string;
+  /** Register or usage note ("informal, British"). */
+  usage?: string;
   /** Whether this is a new word or a review. */
   review: boolean;
   audio?: { term?: string; example?: string };
@@ -121,10 +127,12 @@ export interface WordsSession {
   drill?: AudioRef;
   docEntries: number;
   newEntries: number;
+  /** Where the notebook came from this time: the live document or the committed snapshot. */
+  source?: "live" | "snapshot";
 }
 
 export interface WordsRegistry {
-  /** term (normalised) → first seen, last reviewed. */
+  /** notebook key → first seen, last reviewed. */
   [key: string]: { term: string; firstSeen: string; lastReviewed?: string; times: number };
 }
 
@@ -216,9 +224,14 @@ export interface EditionsConfig {
 
 export interface WordsConfig {
   google_doc_id?: string;
-  marker: string;
+  /** Kept for the old table-style document; the notebook format ignores it. */
+  marker?: string;
   per_week: number;
   review_after_weeks: number;
+  /** Share of each session kept for words coming back (0.25 → 5 of 20). */
+  review_share: number;
+  /** At most this many entries from one section of the notebook per session. */
+  max_per_theme: number;
 }
 
 export interface SiteConfig {

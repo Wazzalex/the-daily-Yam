@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { BookRefresher, DailyEdition, Item, WeeklyEdition, WordsRegistry, WordsSession } from "../../lib/types";
 import type { ResolvedCache } from "./fetchers";
+import type { DocSnapshot } from "./words-doc";
 
 export const DATA_DIR = path.join(process.cwd(), "data");
 const POOL_FILE = path.join(DATA_DIR, "pool.json");
@@ -54,6 +55,15 @@ export function latestWeeklyDate(): string | null {
 export function readWeekly(date: string): WeeklyEdition | null {
   return readJson<WeeklyEdition>(path.join(WEEKLY_DIR, `${date}.json`));
 }
+/** Rewrites a weekly edition's file alone (its items snapshot untouched). */
+export function writeWeeklyEdition(ed: WeeklyEdition) {
+  writeJson(path.join(WEEKLY_DIR, `${ed.date}.json`), ed);
+}
+/** Titles of the items picked in a weekly, from its snapshot. */
+export function readWeeklyTitles(date: string): string[] | null {
+  const items = readJson<Item[]>(path.join(WEEKLY_DIR, `${date}.items.json`));
+  return items ? items.map((i) => i.title) : null;
+}
 export function writeWeekly(ed: WeeklyEdition, items: Item[]) {
   writeJson(path.join(WEEKLY_DIR, `${ed.date}.json`), ed);
   // Snapshot of the picked items so the page survives the pool pruning.
@@ -82,6 +92,18 @@ export function writeWordsRegistry(r: WordsRegistry) {
 }
 export function writeWordsSession(s: WordsSession) {
   writeJson(path.join(WORDS_DIR, `${s.date}.json`), s);
+}
+export function latestWordsDate(): string | null {
+  if (!fs.existsSync(WORDS_DIR)) return null;
+  const files = fs.readdirSync(WORDS_DIR).filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort();
+  return files.length ? files[files.length - 1].slice(0, 10) : null;
+}
+/** The last copy of the notebook (data/words/source.json), used when the live export is not reachable. */
+export function readWordsSnapshot(): DocSnapshot | null {
+  return readJson<DocSnapshot>(path.join(WORDS_DIR, "source.json"));
+}
+export function writeWordsSnapshot(s: DocSnapshot) {
+  writeJson(path.join(WORDS_DIR, "source.json"), s);
 }
 
 // ---- books
