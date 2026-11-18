@@ -21,6 +21,7 @@ function getClient(): Anthropic {
 
 export async function ask(model: string, system: string, user: string, maxTokens: number): Promise<string> {
   const res = await getClient().messages.create({ model, max_tokens: maxTokens, system, messages: [{ role: "user", content: user }] });
+  if (res.stop_reason === "max_tokens") console.warn(`  claude: reply cut at ${maxTokens} tokens (${model})`);
   usage.calls += 1;
   usage.inputTokens += res.usage?.input_tokens ?? 0;
   usage.outputTokens += res.usage?.output_tokens ?? 0;
@@ -274,6 +275,14 @@ export async function buildWordEntries(
   words: Array<RawWord & { review: boolean }>,
   weekContext: string[],
 ): Promise<WordEntry[]> {
+  // Ten entries per call: short replies, nothing cut, and a failed batch costs little.
+  const BATCH = 10;
+  if (words.length > BATCH) {
+    const batches: Array<Array<RawWord & { review: boolean }>> = [];
+    for (let i = 0; i < words.length; i += BATCH) batches.push(words.slice(i, i + BATCH));
+    const results = await Promise.all(batches.map((b) => buildWordEntries(config, b, weekContext)));
+    return results.flat();
+  }
   const system = `You prepare a weekly vocabulary session for one learner, Yamuna, an English teacher living in France (Grenoble). The entries come from her own vocabulary notebook: each is a line she wrote — usually a sentence from her life with the key word or expression highlighted, sometimes a bare word with a French gloss in brackets or after "=", sometimes several variants. Her notebook is British in flavour; keep it so. You identify the headword, define it precisely and give a natural example. Never invent meanings: when a line is obscure, define the most plausible sense and keep the definition short. Reply with JSON only.`;
   const list = words
     .map((w, i) => {
@@ -300,7 +309,7 @@ For each entry return an object with:
 - "pronunciation": the headword in British IPA between slashes, e.g. "/ˈdɒləp/"; reuse hers when she gave one. For a French term, French IPA.
 - "usage": at most six words on register or origin when it matters ("informal, British", "Cockney rhyming slang", "literary"), otherwise "".
 Return a JSON array with exactly ${words.length} objects, in order.`;
-  const text = await ask(SMART_MODEL, system, user, 6000);
+  const text = await ask(SMART_MODEL, system, user, 8000);
   const parsed = extractJson<Array<{ i?: number; lang?: string; term?: string; definition?: string; example?: string; pronunciation?: string; usage?: string }>>(text);
   const byIndex = new Map<number, (typeof parsed)[number]>();
   parsed.forEach((p, idx) => byIndex.set(typeof p.i === "number" ? p.i : idx, p));
@@ -342,7 +351,7 @@ Write a refresher for someone who read it years ago and wants it back in her hea
 - "script": a spoken version of all this for a text-to-speech voice, about ${targetWords} words, flowing prose, opening "Let's remember ${book.title}" and ending with one of the questions. No headings, no lists.
 - "confidence": "high" if this is a well-known book you know thoroughly, "medium" if you know it but details may be fuzzy, "low" if you barely know it — then keep everything brief and say so in the script.
 Return JSON with exactly those keys.`;
-  const text = await ask(SMART_MODEL, system, user, 6000);
+  const text = await ask(SMART_MODEL, system, user, 8000);
   const p = extractJson<Partial<BookRefresher>>(text);
   return {
     inANutshell: (p.inANutshell ?? "").trim(),

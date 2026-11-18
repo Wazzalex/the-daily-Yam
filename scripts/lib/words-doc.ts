@@ -308,6 +308,7 @@ export function parseNotebook(paragraphs: DocParagraph[]): NotebookEntry[] {
       }
       if (/^Enriching my vocab/i.test(raw)) continue;
       theme = raw.replace(/\s+/g, " ").replace(/^[+\s]+/, "").trim();
+      theme = theme.charAt(0).toUpperCase() + theme.slice(1); // "+++ comments and attitude" → "Comments and attitude"
       pendingThemeFragment = theme;
       continue;
     }

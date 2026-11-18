@@ -103,6 +103,23 @@ export function extractJson<T>(text: string): T {
   const open = body[start];
   const close = open === "[" ? "]" : "}";
   const end = body.lastIndexOf(close);
-  if (end <= start) throw new Error("Unterminated JSON in model reply");
-  return JSON.parse(body.slice(start, end + 1)) as T;
+  if (end > start) {
+    try {
+      return JSON.parse(body.slice(start, end + 1)) as T;
+    } catch {
+      /* fall through to the salvage below */
+    }
+  }
+  // A reply cut short (max_tokens) usually ends inside an array: keep the complete objects.
+  if (open === "[") {
+    const lastObj = body.lastIndexOf("}");
+    if (lastObj > start) {
+      try {
+        return JSON.parse(body.slice(start, lastObj + 1) + "]") as T;
+      } catch {
+        /* give up below */
+      }
+    }
+  }
+  throw new Error(`Unterminated JSON in model reply (${body.length} chars, starts "${body.slice(start, start + 80).replace(/\s+/g, " ")}…")`);
 }
