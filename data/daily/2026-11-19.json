@@ -1,0 +1,530 @@
+{
+ "date": "2026-11-19",
+ "generatedAt": "2026-11-19T11:57:21.083Z",
+ "script": "Good morning, Yamuna. It's Thursday the nineteenth of November, and I thought we might begin with a few riddles.\n\nThe Guardian has a lively piece on Jan van Eyck, whose ten surviving portraits look so vividly, almost uncomfortably real. The feature's argument is that they are also full of tricks and traps: cryptic inscriptions, little hidden details, secret messages that the sitters, and we, are invited to puzzle over. It comes with a review of the exhibition Van Eyck: The Portraits. If you like the moment when a painting starts talking back to the written word, this one is for you.\n\nFrom paint to the page, and from the page to a screen. Arte has put online a French-language discussion on Virginia Woolf, called Un lieu à soi, une voix pour toutes. It revisits her 1929 essay A Room of One's Own, with contemporary writers including Marie Darrieussecq and Titiou Lecoq. Since you are teaching literature in French surroundings, it could be a lovely thing to dip into, perhaps to hear how Woolf sounds when she is carried into another language and another generation.\n\nNow, a novel. The Guardian reviews The Hill, a debut by Harriet Clark, and calls it distinctive. Its narrator is a girl growing up with a mother who is serving a life sentence. The prison visits give the book its rhythm, and woven through them are the war-weary memories of the girl's grandmother. That is a young voice and an old one, side by side, which is just the kind of narrator-and-history pairing you tend to enjoy.\n\nStaying with the way history can be told, there is an obituary in the Guardian of the Oxford historian Theodore Zeldin. He was celebrated for a novelistic approach to history, and for his Oxford Muse conversations. It is a short read, but it might send you back to the idea that the past is best understood as a set of human stories, rather than a list of dates.\n\nAnd for the drive, or the walk to school, there is In Our Time on Radio 4, this week on Ishtar, the Mesopotamian goddess of love and war. She was worshipped for more than three and a half thousand years, and the programme describes her as transgressive. It runs to fifty-three minutes, so it is one for a longer journey, and one that rewards you with a very old kind of storytelling.\n\nAnd one good thing before you go. Hannah Lillith Assadi has won the US National Book Award for fiction with Paradiso 17, which the Guardian reports as a visionary novel. It is drawn from her late father's escape from the Nakba, so a story that began in a family has now been honoured as a work of fiction. It is good to see a book rooted in so much memory given such a bright moment.\n\nHave a lovely day, Yamuna, and I hope something beautiful turns up in your classroom.",
+ "words": 491,
+ "teaser": "Van Eyck's hidden riddles, Woolf in French, and a prize-winning novel",
+ "itemIds": [
+  "1a52ef60d8e8b8c4",
+  "5867b3165053f2b4",
+  "751ec9c4b06464b9",
+  "eb35d30af89346c1",
+  "274896fed16d934c",
+  "84363146d43cdf22",
+  "84363146d43cdf22"
+ ],
+ "newCandidates": 46,
+ "sources": [
+  {
+   "category": "art",
+   "name": "BBC Radio 4 — Front Row",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 2000,
+   "kept": 4,
+   "ms": 1216
+  },
+  {
+   "category": "art",
+   "name": "Beaux Arts Magazine",
+   "type": "rss",
+   "ok": true,
+   "fetched": 12,
+   "kept": 10,
+   "ms": 1255
+  },
+  {
+   "category": "art",
+   "name": "Grandes expositions à Paris (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 32,
+   "kept": 28,
+   "ms": 377
+  },
+  {
+   "category": "art",
+   "name": "Great Art Explained — YouTube",
+   "type": "youtube",
+   "ok": true,
+   "fetched": 15,
+   "kept": 0,
+   "ms": 224
+  },
+  {
+   "category": "art",
+   "name": "Hyperallergic",
+   "type": "rss",
+   "ok": true,
+   "fetched": 15,
+   "kept": 15,
+   "ms": 366
+  },
+  {
+   "category": "art",
+   "name": "Musée de Grenoble — expositions",
+   "type": "page",
+   "ok": true,
+   "fetched": 7,
+   "kept": 7,
+   "ms": 9877,
+   "note": "page: 1218 chars, 16 links"
+  },
+  {
+   "category": "art",
+   "name": "Talk Art",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 14,
+   "kept": 0,
+   "ms": 116
+  },
+  {
+   "category": "art",
+   "name": "The Guardian — Art and design",
+   "type": "rss",
+   "ok": true,
+   "fetched": 23,
+   "kept": 13,
+   "ms": 505
+  },
+  {
+   "category": "art",
+   "name": "The National Gallery — YouTube",
+   "type": "youtube",
+   "ok": true,
+   "fetched": 15,
+   "kept": 4,
+   "ms": 257
+  },
+  {
+   "category": "art",
+   "name": "The Week in Art (The Art Newspaper)",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 399,
+   "kept": 1,
+   "ms": 216
+  },
+  {
+   "category": "good",
+   "name": "Good News Network",
+   "type": "rss",
+   "ok": true,
+   "fetched": 50,
+   "kept": 11,
+   "ms": 242
+  },
+  {
+   "category": "good",
+   "name": "Positive News (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 5,
+   "kept": 4,
+   "ms": 268
+  },
+  {
+   "category": "good",
+   "name": "Reasons to be Cheerful",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 2,
+   "ms": 137
+  },
+  {
+   "category": "good",
+   "name": "The Optimist Daily",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 4,
+   "ms": 663
+  },
+  {
+   "category": "literature",
+   "name": "Backlisted",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 279,
+   "kept": 1,
+   "ms": 813
+  },
+  {
+   "category": "literature",
+   "name": "BBC Radio 4 — Bookclub",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 355,
+   "kept": 0,
+   "ms": 281
+  },
+  {
+   "category": "literature",
+   "name": "BBC Radio 4 — In Our Time",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 1123,
+   "kept": 2,
+   "ms": 653
+  },
+  {
+   "category": "literature",
+   "name": "BBC Radio 4 — Open Book",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 108,
+   "kept": 1,
+   "ms": 385
+  },
+  {
+   "category": "literature",
+   "name": "BBC Radio 4 — This Cultural Life",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 169,
+   "kept": 0,
+   "ms": 362
+  },
+  {
+   "category": "literature",
+   "name": "BBC World Service — World Book Club",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 108,
+   "kept": 1,
+   "ms": 742
+  },
+  {
+   "category": "literature",
+   "name": "Booker Prize news",
+   "type": "news",
+   "ok": true,
+   "fetched": 23,
+   "kept": 20,
+   "ms": 395
+  },
+  {
+   "category": "literature",
+   "name": "Literary Hub",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 10,
+   "ms": 287
+  },
+  {
+   "category": "literature",
+   "name": "London Review of Books",
+   "type": "rss",
+   "ok": true,
+   "fetched": 24,
+   "kept": 0,
+   "ms": 390
+  },
+  {
+   "category": "literature",
+   "name": "London Review of Books — Podcast",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 737,
+   "kept": 1,
+   "ms": 569
+  },
+  {
+   "category": "literature",
+   "name": "Slightly Foxed",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 61,
+   "kept": 0,
+   "ms": 432
+  },
+  {
+   "category": "literature",
+   "name": "The Guardian — Books",
+   "type": "rss",
+   "ok": true,
+   "fetched": 29,
+   "kept": 5,
+   "ms": 248
+  },
+  {
+   "category": "literature",
+   "name": "The Guardian Books Podcast",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 82,
+   "kept": 0,
+   "ms": 442
+  },
+  {
+   "category": "literature",
+   "name": "The New York Times — Books",
+   "type": "rss",
+   "ok": true,
+   "fetched": 36,
+   "kept": 9,
+   "ms": 108
+  },
+  {
+   "category": "literature",
+   "name": "The New Yorker — Books",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 1,
+   "ms": 137
+  },
+  {
+   "category": "literature",
+   "name": "The New Yorker — Fiction",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 237,
+   "kept": 0,
+   "ms": 326
+  },
+  {
+   "category": "literature",
+   "name": "The Paris Review — The Daily",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 1,
+   "ms": 201
+  },
+  {
+   "category": "watch",
+   "name": "Arte — documentaires et séries (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 46,
+   "kept": 35,
+   "ms": 352
+  },
+  {
+   "category": "watch",
+   "name": "ARTE Concert — YouTube",
+   "type": "youtube",
+   "ok": true,
+   "fetched": 15,
+   "kept": 15,
+   "ms": 245
+  },
+  {
+   "category": "watch",
+   "name": "BBC — Entertainment and arts",
+   "type": "rss",
+   "ok": true,
+   "fetched": 17,
+   "kept": 14,
+   "ms": 252
+  },
+  {
+   "category": "watch",
+   "name": "BBC Radio 3 — Music Matters",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 148,
+   "kept": 0,
+   "ms": 434
+  },
+  {
+   "category": "watch",
+   "name": "Classical music documentaries (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 13,
+   "kept": 11,
+   "ms": 339
+  },
+  {
+   "category": "watch",
+   "name": "Dance documentaries (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 20,
+   "kept": 14,
+   "ms": 385
+  },
+  {
+   "category": "watch",
+   "name": "New thriller series (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 29,
+   "kept": 17,
+   "ms": 475
+  },
+  {
+   "category": "watch",
+   "name": "Radio Times",
+   "type": "rss",
+   "ok": true,
+   "fetched": 30,
+   "kept": 30,
+   "ms": 171
+  },
+  {
+   "category": "watch",
+   "name": "Royal Ballet and Opera — YouTube",
+   "type": "youtube",
+   "ok": true,
+   "fetched": 15,
+   "kept": 12,
+   "ms": 381
+  },
+  {
+   "category": "watch",
+   "name": "The Guardian — Classical music and opera",
+   "type": "rss",
+   "ok": true,
+   "fetched": 19,
+   "kept": 2,
+   "ms": 388
+  },
+  {
+   "category": "watch",
+   "name": "The Guardian — Dance",
+   "type": "rss",
+   "ok": true,
+   "fetched": 20,
+   "kept": 1,
+   "ms": 373
+  },
+  {
+   "category": "watch",
+   "name": "The Guardian — TV and radio",
+   "type": "rss",
+   "ok": true,
+   "fetched": 20,
+   "kept": 2,
+   "ms": 386
+  },
+  {
+   "category": "watch",
+   "name": "The Rest Is Entertainment",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 336,
+   "kept": 3,
+   "ms": 373
+  },
+  {
+   "category": "watch",
+   "name": "What's on Netflix",
+   "type": "rss",
+   "ok": true,
+   "fetched": 50,
+   "kept": 32,
+   "ms": 260
+  },
+  {
+   "category": "world",
+   "name": "Aeon",
+   "type": "rss",
+   "ok": true,
+   "fetched": 20,
+   "kept": 3,
+   "ms": 310
+  },
+  {
+   "category": "world",
+   "name": "BBC — The Global Story",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 695,
+   "kept": 5,
+   "ms": 459
+  },
+  {
+   "category": "world",
+   "name": "BBC News — Long reads and features",
+   "type": "rss",
+   "ok": true,
+   "fetched": 17,
+   "kept": 0,
+   "ms": 900
+  },
+  {
+   "category": "world",
+   "name": "BBC Radio 4 — Desert Island Discs",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 2000,
+   "kept": 1,
+   "ms": 1507
+  },
+  {
+   "category": "world",
+   "name": "BBC Radio 4 — From Our Own Correspondent",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 1266,
+   "kept": 1,
+   "ms": 1716
+  },
+  {
+   "category": "world",
+   "name": "BBC Radio 4 — Start the Week",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 665,
+   "kept": 1,
+   "ms": 982
+  },
+  {
+   "category": "world",
+   "name": "BBC World Service — The Documentary",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 2000,
+   "kept": 8,
+   "ms": 1248
+  },
+  {
+   "category": "world",
+   "name": "The Economist — The Intelligence",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 2068,
+   "kept": 5,
+   "ms": 895
+  },
+  {
+   "category": "world",
+   "name": "The Guardian — The Audio Long Read",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 300,
+   "kept": 3,
+   "ms": 1350
+  },
+  {
+   "category": "world",
+   "name": "The Guardian — The Long Read",
+   "type": "rss",
+   "ok": true,
+   "fetched": 20,
+   "kept": 2,
+   "ms": 625
+  },
+  {
+   "category": "world",
+   "name": "The Guardian — UK",
+   "type": "rss",
+   "ok": false,
+   "fetched": 0,
+   "kept": 0,
+   "ms": 266,
+   "error": "fetch failed"
+  }
+ ],
+ "usage": {
+  "inputTokens": 31202,
+  "outputTokens": 22706,
+  "calls": 11
+ }
+}
