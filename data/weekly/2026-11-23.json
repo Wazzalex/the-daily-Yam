@@ -1,0 +1,102 @@
+{
+ "date": "2026-11-23",
+ "weekOf": "2026-11-23",
+ "generatedAt": "2026-11-23T19:34:32.626Z",
+ "greeting": "Good morning, Yamuna. This week the Van Eyck portraits and a Renoir video from the National Gallery look made for a slow weekend, with Alan Garner's Red Shift waiting for your drive.",
+ "picks": {
+  "literature": [
+   {
+    "itemId": "814b05e84ab24cff",
+    "mode": "listen",
+    "why": "A conversation about a novel's layered, history-haunted storytelling and the force of its narrative voice, which is just your territory, and the hour suits a drive."
+   },
+   {
+    "itemId": "6fe03fb47ef02ce2",
+    "mode": "listen",
+    "why": "A first-person narrator and a piece of history that no essay could convey so directly: Melvyn Bragg and guests on a voice worth hearing."
+   },
+   {
+    "itemId": "f0085ac41069710e",
+    "mode": "read",
+    "why": "A biography whose very title pairs art with life, a lovely fit for your interest in how painting and fiction speak to each other."
+   },
+   {
+    "itemId": "7ffdf699525e8688",
+    "mode": "read",
+    "why": "A short, appreciative essay on lyrical, musical prose, for a quiet moment when you want language that is simply beautiful."
+   }
+  ],
+  "art": [
+   {
+    "itemId": "b7d07fc8147579bf",
+    "mode": "listen",
+    "why": "An hour with a co-curator walking you through the Van Eyck show is ideal for the car, and the auction-week chatter is a pleasant bonus."
+   },
+   {
+    "itemId": "57b04ceb6ddf0e23",
+    "mode": "listen",
+    "why": "A change of painter and mood: Renoir's love-themed paintings, guided by the curators who know them best, and easy to enjoy by ear."
+   },
+   {
+    "itemId": "c98647b162f5883e",
+    "mode": "read",
+    "why": "Since you will already have heard about Van Eyck, this review adds the pleasure of vivid, carefully made prose about the paintings themselves."
+   },
+   {
+    "itemId": "6f8f49d860bf39c2",
+    "mode": "read",
+    "why": "A sixteenth-century book of apocalyptic omens, with a wonderfully modern 'doomscrolling' comparison: strange, visual and made for storytelling."
+   }
+  ],
+  "watch": [
+   {
+    "itemId": "3d9bf06f80a17ab5",
+    "mode": "listen",
+    "why": "A painting, a missing woman and a story waiting to be told: Tissot's canvas read almost like a novel's opening, and it is on Arte."
+   },
+   {
+    "itemId": "5867b3165053f2b4",
+    "mode": "listen",
+    "why": "As a literature teacher you may enjoy hearing contemporary French writers talk about Woolf's essay, in conversation rather than on the page."
+   },
+   {
+    "itemId": "25a87f0b3bc9cea3",
+    "mode": "read",
+    "why": "History told through women's own voices, much as a good novel would tell it, and the full film is free on Arte."
+   },
+   {
+    "itemId": "ff89e148a796bb93",
+    "mode": "read",
+    "why": "A gentler cultural detour on Disney+, and a pleasing companion to this week's doll-themed Arte film."
+   }
+  ],
+  "world": [
+   {
+    "itemId": "44d0b47d319b7d9e",
+    "mode": "listen",
+    "why": "A novel about Ravel and Vaughan Williams, discussed on Start the Week: fiction, music and friendship across borders, ideal for a drive."
+   },
+   {
+    "itemId": "3a732585b335a9fe",
+    "mode": "listen",
+    "why": "A single place and its buried history, told as a documentary: the kind of story that teaches more than an essay."
+   },
+   {
+    "itemId": "b894d8c59d058218",
+    "mode": "read",
+    "why": "Selkies, family memory and Irish folklore in one essay: a story you can step into without needing the background first."
+   },
+   {
+    "itemId": "4070f8bb4cb83885",
+    "mode": "read",
+    "why": "A physicist, lost birdsong and music: a short, gentle piece for someone who loves beautiful sound."
+   }
+  ]
+ },
+ "wordsSession": "2026-11-23",
+ "usage": {
+  "inputTokens": 56668,
+  "outputTokens": 31259,
+  "calls": 19
+ }
+}
