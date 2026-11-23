@@ -123,3 +123,18 @@ export function extractJson<T>(text: string): T {
   }
   throw new Error(`Unterminated JSON in model reply (${body.length} chars, starts "${body.slice(start, start + 80).replace(/\s+/g, " ")}…")`);
 }
+
+/**
+ * Like extractJson, but always hands back an array: a reply wrapped in an object
+ * ({"results": [...]}) or a lone object is unwrapped rather than crashing the caller.
+ */
+export function extractArray<T>(text: string): T[] {
+  const v = extractJson<unknown>(text);
+  if (Array.isArray(v)) return v as T[];
+  if (v && typeof v === "object") {
+    const inner = Object.values(v as Record<string, unknown>).find((x) => Array.isArray(x));
+    if (inner) return inner as T[];
+    return [v as T];
+  }
+  throw new Error("Expected a JSON array in model reply");
+}

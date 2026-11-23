@@ -5,7 +5,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { Book, BookRefresher, CategoryConfig, Item, SiteConfig, WeeklyPick, WordEntry } from "../../lib/types";
 import type { PageContent, RawItem } from "./fetchers";
-import { countWords, extractJson, truncate } from "./text";
+import { countWords, extractArray, extractJson, truncate } from "./text";
 
 export const FAST_MODEL = process.env.YAM_FAST_MODEL ?? "claude-haiku-5-5";
 export const SMART_MODEL = process.env.YAM_SMART_MODEL ?? "claude-sonnet-5-5";
@@ -81,7 +81,7 @@ Return a JSON array; [] if nothing relevant.`;
   const text = await ask(FAST_MODEL, system, user, 3000);
   let parsed: ExtractedEvent[] = [];
   try {
-    parsed = extractJson<ExtractedEvent[]>(text);
+    parsed = extractArray<ExtractedEvent>(text);
   } catch {
     return [];
   }
@@ -145,12 +145,18 @@ CANDIDATES:
 ${list}
 
 Return a JSON array with exactly ${items.length} objects in order: {"i": index, "keep": boolean, "relevance": number, "summary": string, "goodNews": boolean}.`;
-  const text = await ask(FAST_MODEL, system, user, 3500);
-  let parsed: Array<{ i?: number; keep?: boolean; relevance?: number; summary?: string; goodNews?: boolean }> = [];
-  try {
-    parsed = extractJson(text);
-  } catch (err) {
-    throw new Error(`Could not parse Claude's JSON for ${cat.id}: ${(err as Error).message}`);
+  type Verdict = { i?: number; keep?: boolean; relevance?: number; summary?: string; goodNews?: boolean };
+  let parsed: Verdict[] = [];
+  // One malformed reply must not sink the whole morning: ask again once, then let the batch go.
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const text = await ask(FAST_MODEL, system, user, 3500);
+    try {
+      parsed = extractArray<Verdict>(text);
+      break;
+    } catch (err) {
+      console.warn(`  ${cat.id}: could not read Claude's verdicts (attempt ${attempt}): ${(err as Error).message.slice(0, 120)}`);
+      if (attempt === 2) return items.map(() => ({ keep: false, relevance: 0, summary: "", goodNews: false }));
+    }
   }
   const byIndex = new Map<number, (typeof parsed)[number]>();
   parsed.forEach((p, idx) => byIndex.set(typeof p.i === "number" ? p.i : idx, p));
@@ -310,7 +316,7 @@ For each entry return an object with:
 - "usage": at most six words on register or origin when it matters ("informal, British", "Cockney rhyming slang", "literary"), otherwise "".
 Return a JSON array with exactly ${words.length} objects, in order.`;
   const text = await ask(SMART_MODEL, system, user, 8000);
-  const parsed = extractJson<Array<{ i?: number; lang?: string; term?: string; definition?: string; example?: string; pronunciation?: string; usage?: string }>>(text);
+  const parsed = extractArray<{ i?: number; lang?: string; term?: string; definition?: string; example?: string; pronunciation?: string; usage?: string }>(text);
   const byIndex = new Map<number, (typeof parsed)[number]>();
   parsed.forEach((p, idx) => byIndex.set(typeof p.i === "number" ? p.i : idx, p));
   return words.map((w, i) => {
