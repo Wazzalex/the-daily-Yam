@@ -1,0 +1,541 @@
+{
+ "date": "2026-11-26",
+ "generatedAt": "2026-11-26T12:57:18.698Z",
+ "script": "Good morning, Yamuna, and happy Thursday. I've gathered a few things that sit beside the news this morning, mostly for the ear and the eye, and one or two for the car on the way to school.\n\nLet's begin with a novel. The Guardian has been reviewing Honey by Elizabeth Jenkins, a rediscovered nineteen-sixties book about sex, money and power. The reviewer calls its heroine monstously compelling, which is exactly the sort of narrator you like to spend time with, and praises its wit alongside its ruthlessness. It sounds like a book that lets you enjoy someone behaving terribly, with a very sharp pen holding the leash.\n\nStaying with writers, ARTE has a programme in French called Virginia Woolf, une vie de lutte. It revisits A Room of One's Own a century after it was published, with the novelist Marie Darrieussecq and the writer Titiou Lecoq. It's on ARTE Concert on YouTube, and I rather think it might earn a place in a lesson, or at least in your own evening. There's something lovely about hearing two French writers talk about a book you've perhaps taught many times in English.\n\nNow a little painting, and a bridge back to words. The Guardian reviews Anselm Kiefer's new show at White Cube Bermondsey, in London. Norse myth and German Romantic poetry meet art haunted by the Holocaust, in forests and in what the headline calls a glimpse into a gigantic grave. The reviewer feels the scale of the work can't quite match the weight of its themes, which is an interesting complaint in itself. But if you've ever wanted to see what happens when poetry is turned into paint and earth, it's worth reading about.\n\nAnd for something to lift the roof off the morning, the Royal Ballet and Opera has put Kathryn Lewek singing the Queen of the Night aria from Mozart's The Magic Flute on YouTube. It's the one with the astonishing high notes, a voice that commands the night, as they put it. The production returns to the Royal Opera on the thirteenth of December, so consider this a very good trailer, and four or five minutes of pure musical nerve.\n\nOne for the drive now. On Front Row, on BBC Radio 4, Michael Sheen talks about Owain and Henry, a play by Gary Owen in which he stars and which he co-directs, at the Wales Millennium Centre. It's about Owain Glyndŵr's rebellion against Henry the Fourth, so it's history brought to life on a stage, which I know is a weakness of yours. The interview runs to about forty-two minutes, which is just about a good stretch of motorway, or one slow walk home.\n\nAnd one good thing before you go. On the BBC World Service, in The Documentary, there's an episode called From barefoot to blacktop. The zoologist Professor Ben Garrod crosses Uganda to explore how running has become a way of life, and a route to social mobility, in East Africa. It's fifty minutes of people, landscape and movement, and I suspect it will leave you with a spring in your own step.\n\nHave a lovely day, Yamuna, and may something beautiful turn up in it.",
+ "words": 530,
+ "teaser": "A monstrous heroine, Woolf in French, and the Queen of the Night at full tilt",
+ "itemIds": [
+  "a6044bce1c5b966c",
+  "a451d758b09e1ec9",
+  "c8d634692fba8884",
+  "688b8b6b12bf5b4a",
+  "261d3aaaeaea89ed",
+  "d2c37c4c075434ee",
+  "d2c37c4c075434ee"
+ ],
+ "newCandidates": 33,
+ "sources": [
+  {
+   "category": "art",
+   "name": "BBC Radio 4 — Front Row",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 2000,
+   "kept": 4,
+   "ms": 505
+  },
+  {
+   "category": "art",
+   "name": "Beaux Arts Magazine",
+   "type": "rss",
+   "ok": true,
+   "fetched": 12,
+   "kept": 12,
+   "ms": 1421
+  },
+  {
+   "category": "art",
+   "name": "Grandes expositions à Paris (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 55,
+   "kept": 40,
+   "ms": 520
+  },
+  {
+   "category": "art",
+   "name": "Great Art Explained — YouTube",
+   "type": "youtube",
+   "ok": true,
+   "fetched": 15,
+   "kept": 0,
+   "ms": 513
+  },
+  {
+   "category": "art",
+   "name": "Hyperallergic",
+   "type": "rss",
+   "ok": false,
+   "fetched": 0,
+   "kept": 0,
+   "ms": 416,
+   "error": "HTTP 404"
+  },
+  {
+   "category": "art",
+   "name": "Musée de Grenoble — expositions",
+   "type": "page",
+   "ok": true,
+   "fetched": 4,
+   "kept": 4,
+   "ms": 7894,
+   "note": "page: 1259 chars, 16 links"
+  },
+  {
+   "category": "art",
+   "name": "Talk Art",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 14,
+   "kept": 0,
+   "ms": 94
+  },
+  {
+   "category": "art",
+   "name": "The Guardian — Art and design",
+   "type": "rss",
+   "ok": true,
+   "fetched": 23,
+   "kept": 13,
+   "ms": 520
+  },
+  {
+   "category": "art",
+   "name": "The National Gallery — YouTube",
+   "type": "youtube",
+   "ok": true,
+   "fetched": 15,
+   "kept": 3,
+   "ms": 515
+  },
+  {
+   "category": "art",
+   "name": "The Week in Art (The Art Newspaper)",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 400,
+   "kept": 1,
+   "ms": 629
+  },
+  {
+   "category": "good",
+   "name": "Good News Network",
+   "type": "rss",
+   "ok": true,
+   "fetched": 50,
+   "kept": 10,
+   "ms": 207
+  },
+  {
+   "category": "good",
+   "name": "Positive News (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 3,
+   "kept": 1,
+   "ms": 201
+  },
+  {
+   "category": "good",
+   "name": "Reasons to be Cheerful",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 2,
+   "ms": 82
+  },
+  {
+   "category": "good",
+   "name": "The Optimist Daily",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 3,
+   "ms": 518
+  },
+  {
+   "category": "literature",
+   "name": "Backlisted",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 279,
+   "kept": 0,
+   "ms": 903
+  },
+  {
+   "category": "literature",
+   "name": "BBC Radio 4 — Bookclub",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 355,
+   "kept": 0,
+   "ms": 525
+  },
+  {
+   "category": "literature",
+   "name": "BBC Radio 4 — In Our Time",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 1125,
+   "kept": 2,
+   "ms": 775
+  },
+  {
+   "category": "literature",
+   "name": "BBC Radio 4 — Open Book",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 109,
+   "kept": 1,
+   "ms": 471
+  },
+  {
+   "category": "literature",
+   "name": "BBC Radio 4 — This Cultural Life",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 169,
+   "kept": 0,
+   "ms": 448
+  },
+  {
+   "category": "literature",
+   "name": "BBC World Service — World Book Club",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 109,
+   "kept": 1,
+   "ms": 369
+  },
+  {
+   "category": "literature",
+   "name": "Booker Prize news",
+   "type": "news",
+   "ok": true,
+   "fetched": 72,
+   "kept": 39,
+   "ms": 510
+  },
+  {
+   "category": "literature",
+   "name": "Literary Hub",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 10,
+   "ms": 274
+  },
+  {
+   "category": "literature",
+   "name": "London Review of Books",
+   "type": "rss",
+   "ok": true,
+   "fetched": 24,
+   "kept": 0,
+   "ms": 349
+  },
+  {
+   "category": "literature",
+   "name": "London Review of Books — Podcast",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 738,
+   "kept": 1,
+   "ms": 625
+  },
+  {
+   "category": "literature",
+   "name": "Slightly Foxed",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 61,
+   "kept": 0,
+   "ms": 659
+  },
+  {
+   "category": "literature",
+   "name": "The Guardian — Books",
+   "type": "rss",
+   "ok": true,
+   "fetched": 29,
+   "kept": 6,
+   "ms": 365
+  },
+  {
+   "category": "literature",
+   "name": "The Guardian Books Podcast",
+   "type": "podcast",
+   "ok": false,
+   "fetched": 0,
+   "kept": 0,
+   "ms": 176,
+   "error": "HTTP 403"
+  },
+  {
+   "category": "literature",
+   "name": "The New York Times — Books",
+   "type": "rss",
+   "ok": true,
+   "fetched": 31,
+   "kept": 6,
+   "ms": 118
+  },
+  {
+   "category": "literature",
+   "name": "The New Yorker — Books",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 0,
+   "ms": 227
+  },
+  {
+   "category": "literature",
+   "name": "The New Yorker — Fiction",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 237,
+   "kept": 0,
+   "ms": 371
+  },
+  {
+   "category": "literature",
+   "name": "The Paris Review — The Daily",
+   "type": "rss",
+   "ok": true,
+   "fetched": 10,
+   "kept": 2,
+   "ms": 294
+  },
+  {
+   "category": "watch",
+   "name": "Arte — documentaires et séries (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 38,
+   "kept": 23,
+   "ms": 349
+  },
+  {
+   "category": "watch",
+   "name": "ARTE Concert — YouTube",
+   "type": "youtube",
+   "ok": true,
+   "fetched": 15,
+   "kept": 15,
+   "ms": 283
+  },
+  {
+   "category": "watch",
+   "name": "BBC — Entertainment and arts",
+   "type": "rss",
+   "ok": true,
+   "fetched": 24,
+   "kept": 21,
+   "ms": 298
+  },
+  {
+   "category": "watch",
+   "name": "BBC Radio 3 — Music Matters",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 148,
+   "kept": 0,
+   "ms": 403
+  },
+  {
+   "category": "watch",
+   "name": "Classical music documentaries (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 9,
+   "kept": 6,
+   "ms": 389
+  },
+  {
+   "category": "watch",
+   "name": "Dance documentaries (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 47,
+   "kept": 26,
+   "ms": 489
+  },
+  {
+   "category": "watch",
+   "name": "New thriller series (actualité)",
+   "type": "news",
+   "ok": true,
+   "fetched": 31,
+   "kept": 20,
+   "ms": 384
+  },
+  {
+   "category": "watch",
+   "name": "Radio Times",
+   "type": "rss",
+   "ok": true,
+   "fetched": 30,
+   "kept": 30,
+   "ms": 195
+  },
+  {
+   "category": "watch",
+   "name": "Royal Ballet and Opera — YouTube",
+   "type": "youtube",
+   "ok": true,
+   "fetched": 15,
+   "kept": 3,
+   "ms": 278
+  },
+  {
+   "category": "watch",
+   "name": "The Guardian — Classical music and opera",
+   "type": "rss",
+   "ok": false,
+   "fetched": 0,
+   "kept": 0,
+   "ms": 49,
+   "error": "HTTP 403"
+  },
+  {
+   "category": "watch",
+   "name": "The Guardian — Dance",
+   "type": "rss",
+   "ok": true,
+   "fetched": 20,
+   "kept": 1,
+   "ms": 468
+  },
+  {
+   "category": "watch",
+   "name": "The Guardian — TV and radio",
+   "type": "rss",
+   "ok": false,
+   "fetched": 0,
+   "kept": 0,
+   "ms": 48,
+   "error": "HTTP 403"
+  },
+  {
+   "category": "watch",
+   "name": "The Rest Is Entertainment",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 338,
+   "kept": 2,
+   "ms": 269
+  },
+  {
+   "category": "watch",
+   "name": "What's on Netflix",
+   "type": "rss",
+   "ok": true,
+   "fetched": 50,
+   "kept": 19,
+   "ms": 498
+  },
+  {
+   "category": "world",
+   "name": "Aeon",
+   "type": "rss",
+   "ok": true,
+   "fetched": 20,
+   "kept": 3,
+   "ms": 1097
+  },
+  {
+   "category": "world",
+   "name": "BBC — The Global Story",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 701,
+   "kept": 6,
+   "ms": 240
+  },
+  {
+   "category": "world",
+   "name": "BBC News — Long reads and features",
+   "type": "rss",
+   "ok": true,
+   "fetched": 17,
+   "kept": 0,
+   "ms": 868
+  },
+  {
+   "category": "world",
+   "name": "BBC Radio 4 — Desert Island Discs",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 2000,
+   "kept": 1,
+   "ms": 715
+  },
+  {
+   "category": "world",
+   "name": "BBC Radio 4 — From Our Own Correspondent",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 1267,
+   "kept": 1,
+   "ms": 939
+  },
+  {
+   "category": "world",
+   "name": "BBC Radio 4 — Start the Week",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 666,
+   "kept": 1,
+   "ms": 363
+  },
+  {
+   "category": "world",
+   "name": "BBC World Service — The Documentary",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 2000,
+   "kept": 8,
+   "ms": 1246
+  },
+  {
+   "category": "world",
+   "name": "The Economist — The Intelligence",
+   "type": "podcast",
+   "ok": true,
+   "fetched": 2073,
+   "kept": 5,
+   "ms": 1739
+  },
+  {
+   "category": "world",
+   "name": "The Guardian — The Audio Long Read",
+   "type": "podcast",
+   "ok": false,
+   "fetched": 0,
+   "kept": 0,
+   "ms": 158,
+   "error": "HTTP 403"
+  },
+  {
+   "category": "world",
+   "name": "The Guardian — The Long Read",
+   "type": "rss",
+   "ok": false,
+   "fetched": 0,
+   "kept": 0,
+   "ms": 357,
+   "error": "HTTP 403"
+  },
+  {
+   "category": "world",
+   "name": "The Guardian — UK",
+   "type": "rss",
+   "ok": false,
+   "fetched": 0,
+   "kept": 0,
+   "ms": 536,
+   "error": "HTTP 403"
+  }
+ ],
+ "audio": {
+  "url": "https://qba9bhednq6g7f85.public.blob.vercel-storage.com/audio/2026-11-26/daily-marin-ec9cc57755.mp3",
+  "voice": "marin",
+  "seconds": 212
+ },
+ "usage": {
+  "inputTokens": 29429,
+  "outputTokens": 21188,
+  "calls": 10
+ }
+}
